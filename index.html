@@ -5,69 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>電気料金シミュレーション</title>
   <style>
-    body {
-      font-family: "Hiragino Sans", "Meiryo", sans-serif;
-      background-color: #f4f5f7;
-      color: #333;
-      padding: 20px;
-    }
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      font-size: 1.5rem;
-      text-align: center;
-      color: #e56000; /* au風のオレンジ */
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    input[type="number"], select {
-      width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    .btn-submit {
-      width: 100%;
-      padding: 15px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #fff;
-      background-color: #e56000;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .btn-submit:hover {
-      background-color: #cc5500;
-    }
-    #resultArea {
-      margin-top: 30px;
-      padding: 20px;
-      background: #fff8f3;
-      border: 1px solid #ffccaa;
-      border-radius: 8px;
-      display: none;
-    }
-    .loading {
-      text-align: center;
-      display: none;
-      color: #666;
-    }
+    body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: #f4f5f7; color: #333; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h1 { font-size: 1.5rem; text-align: center; color: #e56000; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
+    input[type="number"], select { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .btn-submit { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: #e56000; border: none; border-radius: 30px; cursor: pointer; transition: background 0.3s; }
+    .btn-submit:hover { background-color: #cc5500; }
+    #resultArea { margin-top: 30px; padding: 20px; background: #fff8f3; border: 1px solid #ffccaa; border-radius: 8px; display: none; }
+    .loading { text-align: center; display: none; color: #666; margin-top: 20px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -77,16 +24,23 @@
   
   <form id="simulationForm">
     <div class="form-group">
-      <label for="postalCode">郵便番号（ハイフンなし）</label>
-      <input type="number" id="postalCode" placeholder="例: 1000001" required>
+      <label for="postcode">郵便番号（ハイフンなし）</label>
+      <input type="number" id="postcode" value="0600001" placeholder="例: 1000001" required>
+    </div>
+
+    <div class="form-group">
+      <label for="currentPlanCode">現在の電力会社・プラン</label>
+      <select id="currentPlanCode" required>
+        <option value="czkxj|hzozmtmvoztgdbcodibtw-czkxj">北海道電力 - 従量電灯B</option>
+      </select>
     </div>
 
     <div class="form-group">
       <label for="amperage">現在の契約アンペア数</label>
       <select id="amperage" required>
         <option value="20">20A</option>
-        <option value="30" selected>30A</option>
-        <option value="40">40A</option>
+        <option value="30">30A</option>
+        <option value="40" selected>40A</option>
         <option value="50">50A</option>
         <option value="60">60A</option>
       </select>
@@ -95,24 +49,16 @@
     <div class="form-group">
       <label for="month">電気代がわかる月</label>
       <select id="month" required>
-        <option value="1">1月</option>
-        <option value="2">2月</option>
-        <option value="3">3月</option>
-        <option value="4">4月</option>
-        <option value="5">5月</option>
-        <option value="6">6月</option>
-        <option value="7">7月</option>
-        <option value="8">8月</option>
-        <option value="9">9月</option>
-        <option value="10">10月</option>
-        <option value="11">11月</option>
-        <option value="12">12月</option>
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+        <option value="10" selected>10月</option><option value="11">11月</option><option value="12">12月</option>
       </select>
     </div>
 
     <div class="form-group">
       <label for="bill">1ヶ月の電気代（円）</label>
-      <input type="number" id="bill" placeholder="例: 8000" required>
+      <input type="number" id="bill" value="1000" placeholder="例: 8000" required>
     </div>
 
     <button type="submit" class="btn-submit">シミュレーションする</button>
@@ -121,10 +67,13 @@
   <div class="loading" id="loadingText">計算中...しばらくお待ちください。</div>
 
   <div id="resultArea">
-    <h2 style="font-size:1.2rem; color:#333;">シミュレーション結果</h2>
-    <p>おすすめのプランに切り替えると...</p>
-    <p style="font-size:1.5rem; font-weight:bold; color:#d9534f;" id="savingsText"></p>
-    <div id="planDetails"></div>
+    <h2 style="font-size:1.2rem; color:#333; margin-top:0;">シミュレーション結果</h2>
+    <p style="margin-bottom: 5px; font-size: 0.9rem;">おすすめのプランに切り替えると...</p>
+    <p style="font-size:1.6rem; font-weight:bold; color:#d9534f; margin:0 0 15px 0;" id="savingsText"></p>
+    <div style="background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
+      <p style="margin: 0; font-size: 0.9rem; color: #666;">おすすめプラン</p>
+      <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem;" id="planDetails"></p>
+    </div>
   </div>
 </div>
 
@@ -132,9 +81,9 @@
 document.getElementById('simulationForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   
-  // 入力値の取得
   const payload = {
-    postalCode: document.getElementById('postalCode').value,
+    postcode: document.getElementById('postcode').value,
+    currentPlanCode: document.getElementById('currentPlanCode').value,
     amperage: parseInt(document.getElementById('amperage').value),
     month: parseInt(document.getElementById('month').value),
     bill: parseInt(document.getElementById('bill').value)
@@ -147,30 +96,23 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
 
   try {
-    // バックエンドのAPIへリクエスト送信
     const response = await fetch('/api/simulate', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
     const data = await response.json();
 
-    if (!response.ok) throw new Error('API通信エラー');
+    if (!response.ok) throw new Error(data.error || 'API通信エラー');
 
-    // 成功時: 結果を画面にバインド（※レスポンス構造は仕様書に合わせて調整してください）
-    const savingsAmount = data.savingsAmount || "データなし";
-    const recommendedPlan = data.recommendedPlanName || "該当プランなし";
-
-    document.getElementById('savingsText').textContent = `年間 約 ${savingsAmount} 円 おトク！`;
-    document.getElementById('planDetails').textContent = `おすすめプラン: ${recommendedPlan}`;
-    
+    // 結果のバインド
+    document.getElementById('savingsText').textContent = `年間 約 ${data.yearSaving.toLocaleString()} 円 おトク！`;
+    document.getElementById('planDetails').textContent = data.targetPlanName;
     resultArea.style.display = 'block';
 
   } catch (error) {
-    alert('シミュレーションの実行に失敗しました。');
+    alert('シミュレーションの実行に失敗しました。\n' + error.message);
     console.error(error);
   } finally {
     loadingText.style.display = 'none';
