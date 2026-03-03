@@ -1,39 +1,45 @@
 const express = require('express');
-const fetch = require('node-fetch'); // Node v18以降は標準のfetchが使えます
+const fetch = require('node-fetch'); // Node v18以降は標準のfetchが利用可能です
 const app = express();
 
 app.use(express.json());
 app.use(express.static('public')); // publicフォルダにindex.htmlを配置
 
-// ENECHANGE APIのエンドポイント（仕様書のBase URLに書き換えてください）
+// ENECHANGE APIのエンドポイント
 const ENECHANGE_API_URL = 'https://emap-api.enechange.jp/simulation/v2/set/electricGasSimulation';
-const ENECHANGE_API_KEY = 'YOUR_API_KEY_HERE'; // 払い出された認証トークン等を設定
+
+// ご指定いただいたAPIキーを設定
+const ENECHANGE_API_KEY = 'hvvLCbxFWwjJTRVt1zA15IqAwNYzy3rZ';
 
 app.post('/api/simulate', async (req, res) => {
   try {
     const { postalCode, amperage, month, bill } = req.body;
 
-    // ENECHANGE仕様書「electricGasSimulation」のSchemaに合わせてPayloadを組み立てます。
-    // ※ 以下のプロパティ名は推測値です。実際のAPI仕様書に記載されているJSONキー名（スネークケースやキャメルケース）に合わせて修正してください。
+    // ----------------------------------------------------------------------
+    // 【修正が必要な箇所】
+    // 以下のJSON構造（apiPayload）は推測に基づく仮のものです。
+    // 実際の仕様書（Request bodyのスキーマ）に合わせてプロパティ名を変更してください。
+    // ----------------------------------------------------------------------
     const apiPayload = {
       postal_code: postalCode,
       current_contract: {
-        energy_type: "electric", // または電気ガスのセット設定
+        energy_type: "electric", 
         amperage: amperage,
         target_month: month,
         monthly_bill: bill,
-        // 現在の電力会社IDやプランIDが必須項目になっている場合は、デフォルト値等を設定する必要があります
-        // provider_id: 123, 
-        // plan_id: 456
+        // current_provider_id: 123, // 必須パラメータがあれば追加
+        // current_plan_id: 456      // 必須パラメータがあれば追加
       }
     };
 
-    // APIをコール
+    // ENECHANGE APIをコール
     const enechangeResponse = await fetch(ENECHANGE_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ENECHANGE_API_KEY}`, // 認証の仕様に合わせて設定（x-api-key等の場合もあり）
+        // APIの認証仕様に合わせてヘッダー名を変更してください。
+        // よくあるパターン： 'Authorization': `Bearer ${ENECHANGE_API_KEY}`, または 'x-api-key': ENECHANGE_API_KEY
+        'x-api-key': ENECHANGE_API_KEY
       },
       body: JSON.stringify(apiPayload)
     });
@@ -41,21 +47,28 @@ app.post('/api/simulate', async (req, res) => {
     const responseData = await enechangeResponse.json();
 
     if (!enechangeResponse.ok) {
-      console.error('API Error:', responseData);
-      return res.status(enechangeResponse.status).json({ error: 'エネチェンジAPIエラー' });
+      console.error('API Error Details:', responseData);
+      return res.status(enechangeResponse.status).json({ 
+        error: 'エネチェンジAPIからエラーが返却されました。',
+        details: responseData 
+      });
     }
 
-    // フロントエンドが必要とするデータを抽出・加工して返却
-    // ※ 仕様書のレスポンス形式に合わせてパス（responseData.xxx.yyy）を変更してください。
+    // ----------------------------------------------------------------------
+    // 【修正が必要な箇所】
+    // 以下のJSONパス（responseData.xxx）も推測です。
+    // 実際の仕様書（Responsesのスキーマ）に合わせて抽出パスを変更してください。
+    // ----------------------------------------------------------------------
     const formattedData = {
       savingsAmount: responseData.annual_savings || 0,
-      recommendedPlanName: responseData.recommended_plan?.name || "おすすめプラン",
+      recommendedPlanName: responseData.recommended_plan?.name || "該当プランが見つかりませんでした",
     };
 
+    // フロントエンドへ結果を返す
     res.json(formattedData);
 
   } catch (error) {
-    console.error('Server Error:', error);
+    console.error('Server Internal Error:', error);
     res.status(500).json({ error: 'サーバー内部でエラーが発生しました。' });
   }
 });
