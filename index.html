@@ -97,13 +97,17 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
-  // 【修正ポイント】空文字 "" ではなく null で埋める
-  const monthly_values = Array(12).fill(null);
+  // 【最重要修正】nullではなく "0" の文字列で12ヶ月分を埋める
+  const monthly_values = Array(12).fill("0");
   monthly_values[month - 1] = String(bill);
 
-  // 対象年月（YYYYMM）の作成
-  const currentYear = new Date().getFullYear();
-  const latestYearMonth = `${currentYear}${String(month).padStart(2, '0')}`;
+  // 【追加修正】未来の月を選択した場合（現在3月で10月を選択等）は去年の年を指定する
+  let targetYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  if (month > currentMonth) {
+    targetYear -= 1;
+  }
+  const latestYearMonth = `${targetYear}${String(month).padStart(2, '0')}`;
 
   const apiPayload = {
     request_id: `req_${Date.now()}`,
