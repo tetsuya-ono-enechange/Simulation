@@ -29,10 +29,14 @@
         }
         input.ok { border: 2px solid #28a745; background-color: #f8fff9; }
 
-        /* スキャンエリアのスタイル（入力欄の下に配置） */
-        .scan-area { margin-top: 10px; text-align: center; background: #fff8f3; padding: 15px; border-radius: 6px; border: 1px dashed var(--brand-orange); }
+        /* スキャンエリア（修正：ご要望のテキストとボタン表記に合わせました） */
+        .scan-area { margin-top: 10px; text-align: center; background: #fff8f3; padding: 20px; border-radius: 6px; border: 1px dashed var(--brand-orange); }
+        .scan-title { font-size: 0.9rem; font-weight: bold; color: var(--brand-orange); margin-bottom: 8px; }
+        .scan-desc { font-size: 0.8rem; color: #666; margin: 0 0 12px; line-height: 1.5; }
         #f1 { display: none; }
-        .btn-scan { background-color: var(--brand-orange); color: white; padding: 10px 18px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.85rem; margin: 5px 0; }
+        .btn-scan { background-color: var(--brand-orange); color: white; padding: 12px 20px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.85rem; margin: 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-scan:hover { background-color: #cc5500; }
+        
         #ld { display: none; font-weight: bold; color: var(--brand-orange); margin: 10px 0; }
         #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 10px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
         .err-msg { color: #d93025; background: #fce8e6; padding: 10px; border-radius: 8px; font-size: 0.8rem; display: none; margin-top: 10px; }
@@ -81,8 +85,9 @@
                     <input type="text" id="d1" placeholder="22桁の番号を入力してください" required maxlength="22">
                     
                     <div class="scan-area">
-                        <p style="font-size: 0.8rem; color: #666; margin: 0 0 5px;">検針票から自動入力できます</p>
-                        <label for="f1" class="btn-scan">📷 検針票を撮影する</label>
+                        <div class="scan-title">＜供給地点特定番号入力サポート＞</div>
+                        <p class="scan-desc">検針票を撮影もしくは画像をアップロードするだけで<br>自動的に入力します。</p>
+                        <label for="f1" class="btn-scan">検針票を撮影する／画像をアップロードする</label>
                         <input type="file" id="f1" accept="image/*" capture="environment">
                         <div id="ld">⏳ 解析中...</div>
                         <div id="scan-err" class="err-msg"></div>
@@ -112,7 +117,7 @@
         document.getElementById('selectedPlanDisplay').value = decodeURIComponent(planName);
     }
 
-    // OCR処理
+    // OCR処理ロジック
     (function(){
         const _0x_k = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
         const _v1 = document.getElementById('f1');
@@ -187,7 +192,7 @@
 
     document.getElementById('applyForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        alert("お申し込み内容を送信しました。");
+        alert("お申し込み内容の確認、または送信処理へ進みます。");
     });
 </script>
 </body>
