@@ -10,7 +10,7 @@
     /* バナーコンテナのスタイル */
     .banner-container {
       width: 100%;
-      max-width: 1000px; /* バナーの最大幅 */
+      max-width: 800px; /* 生成されたバナーの最大幅 */
       margin: 0 auto 20px; /* 中央配置、下にマージン */
       border-radius: 8px; /* 角丸 */
       overflow: hidden; /* 角丸を効かせる */
@@ -37,7 +37,7 @@
 <body>
 
   <div class="banner-container">
-    <img src="image_0.png" alt="ENECHANGEでんき イメージバナー">
+    <img src="enechange_banner.png" alt="ENECHANGEでんき イメージバナー">
   </div>
 
 <div class="container">
@@ -111,8 +111,7 @@
 </div>
 
 <script>
-// 【修正 2】電力会社とプランのサンプルデータ（連動用）
-// ※本来はAPIで取得しますが、ここではハードコードしたサンプルを使用します。
+// 電力会社とプランのサンプルデータ（連動用）
 const providersAndPlans = {
   hepco: {
     name: "北海道電力",
@@ -147,7 +146,7 @@ const providersAndPlans = {
 const currentProvider = document.getElementById('currentProvider');
 const currentPlan = document.getElementById('currentPlan');
 
-// 【修正 3】電力会社選択時の連動処理
+// 電力会社選択時の連動処理
 currentProvider.addEventListener('change', function() {
   const selectedProvider = this.value;
   // プランのプルダウンをリセット
