@@ -29,6 +29,11 @@
     input[type="number"], select, input[type="text"] { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
     .btn-submit { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: #e56000; border: none; border-radius: 30px; cursor: pointer; transition: background 0.3s; }
     .btn-submit:hover { background-color: #cc5500; }
+    
+    /* お申し込みボタン用のスタイル */
+    .btn-apply { display: inline-block; width: 100%; padding: 15px; background: #e56000; color: #fff; text-decoration: none; font-weight: bold; border-radius: 30px; box-sizing: border-box; transition: background 0.3s; }
+    .btn-apply:hover { background: #cc5500; }
+
     #resultArea { margin-top: 30px; padding: 20px; background: #fff8f3; border: 1px solid #ffccaa; border-radius: 8px; display: none; }
     .loading { text-align: center; display: none; color: #666; margin-top: 20px; font-weight: bold; }
     .error-msg { color: #d9534f; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
@@ -64,7 +69,7 @@
       <label for="currentPlan">現在のプラン</label>
       <select id="currentPlan" required disabled>
         <option value="" disabled selected>電力会社を先に選択してください</option>
-        </select>
+      </select>
     </div>
 
     <div class="form-group">
@@ -107,7 +112,7 @@
       <p style="margin: 0; font-size: 0.9rem; color: #666;">おすすめプラン</p>
       <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem;" id="planDetails"></p>
     </div>
-  </div>
+    </div>
 </div>
 
 <script>
@@ -258,8 +263,32 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     } else {
       document.getElementById('savingsText').textContent = `現在のプランが一番お得です！`;
     }
-    document.getElementById('planDetails').textContent = `${bestPlan.provider_name} - ${bestPlan.plan_name}`;
     
+    // おすすめプラン名の表示
+    const planNameText = `${bestPlan.provider_name} - ${bestPlan.plan_name}`;
+    document.getElementById('planDetails').textContent = planNameText;
+
+    // --- 【追加】お申し込みボタンの生成 ---
+    // 既存のボタンがあれば一度削除（連続でシミュレーションした時にボタンが増殖するのを防ぐため）
+    const existingBtn = document.getElementById('applyBtnContainer');
+    if (existingBtn) {
+      existingBtn.remove();
+    }
+
+    // `apply.html` へ遷移するボタンを作成（URLパラメータでプラン名やプランコードを渡すことも可能です）
+    // URLの例: apply.html?plan_code=xxx&plan_name=xxx
+    const applyBtnHtml = `
+      <div id="applyBtnContainer" style="margin-top: 20px; text-align: center;">
+        <a href="apply.html?plan_code=${bestPlan.plan_code}&plan_name=${encodeURIComponent(bestPlan.plan_name)}" class="btn-apply">
+          このプランに申し込む
+        </a>
+      </div>
+    `;
+    
+    // おすすめプランの箱の下にボタンを追加
+    document.getElementById('planDetails').parentElement.insertAdjacentHTML('afterend', applyBtnHtml);
+    // ------------------------------------
+
     resultArea.style.display = 'block';
 
   } catch (error) {
@@ -269,13 +298,6 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     loadingText.style.display = 'none';
   }
 });
-
-// resultArea.style.display = 'block'; の直前などに追記
-const applyBtnHtml = `<div style="margin-top: 20px; text-align: center;">
-                        <a href="apply.html" style="display:inline-block; width:100%; padding:15px; background:#e56000; color:#fff; text-decoration:none; font-weight:bold; border-radius:30px; box-sizing:border-box;">このプランに申し込む</a>
-                      </div>`;
-document.getElementById('planDetails').insertAdjacentHTML('afterend', applyBtnHtml);
-  
 </script>
 </body>
 </html>
