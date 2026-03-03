@@ -3,11 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電気料金シミュレーション</title>
+  <title>電気料金シミュレーション | ENECHANGE</title>
   <style>
-    body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: #f4f5f7; color: #333; padding: 20px; }
+    body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: #f4f5f7; color: #333; padding: 20px; margin: 0; }
+    
+    /* バナーコンテナのスタイル */
+    .banner-container {
+      width: 100%;
+      max-width: 1000px; /* バナーの最大幅 */
+      margin: 0 auto 20px; /* 中央配置、下にマージン */
+      border-radius: 8px; /* 角丸 */
+      overflow: hidden; /* 角丸を効かせる */
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* 影 */
+    }
+    .banner-container img {
+      width: 100%;
+      height: auto; /* アスペクト比を維持 */
+      display: block; /* 下の隙間をなくす */
+    }
+
     .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h1 { font-size: 1.5rem; text-align: center; color: #e56000; }
+    h1 { font-size: 1.5rem; text-align: center; color: #e56000; margin-top: 0; }
     .form-group { margin-bottom: 20px; }
     label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
     input[type="number"], select, input[type="text"] { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
@@ -20,6 +36,10 @@
 </head>
 <body>
 
+  <div class="banner-container">
+    <img src="image_0.png" alt="ENECHANGEでんき イメージバナー">
+  </div>
+
 <div class="container">
   <h1>電気料金シミュレーション</h1>
   
@@ -30,10 +50,21 @@
     </div>
 
     <div class="form-group">
-      <label for="currentPlanCode">現在の電力会社・プラン</label>
-      <select id="currentPlanCode" required>
-        <option value="czkxj|hzozmtmvoztgdbcodibtw-czkxj">北海道電力 - 従量電灯B</option>
+      <label for="currentProvider">現在の電力会社</label>
+      <select id="currentProvider" required>
+        <option value="" disabled selected>電力会社を選択してください</option>
+        <option value="hepco">北海道電力</option>
+        <option value="tepco">東京電力</option>
+        <option value="chuden">中部電力</option>
+        <option value="kanden">関西電力</option>
       </select>
+    </div>
+
+    <div class="form-group">
+      <label for="currentPlan">現在のプラン</label>
+      <select id="currentPlan" required disabled>
+        <option value="" disabled selected>電力会社を先に選択してください</option>
+        </select>
     </div>
 
     <div class="form-group">
@@ -80,11 +111,66 @@
 </div>
 
 <script>
+// 【修正 2】電力会社とプランのサンプルデータ（連動用）
+// ※本来はAPIで取得しますが、ここではハードコードしたサンプルを使用します。
+const providersAndPlans = {
+  hepco: {
+    name: "北海道電力",
+    plans: [
+      { code: "czkxj|hzozmtmvoztgdbcodibtw-czkxj", name: "従量電灯B" },
+      { code: "czkxj|hzozmtmvoztgdbcodibtwtb-czkxj", name: "スマート電灯" }
+    ]
+  },
+  tepco: {
+    name: "東京電力",
+    plans: [
+      { code: "meter_rate_lighting_b", name: "従量電灯B" },
+      { code: "premium_plan", name: "プレミアムプラン" }
+    ]
+  },
+  chuden: {
+    name: "中部電力",
+    plans: [
+      { code: "meter_rate_lighting_b", name: "従量電灯B" },
+      { code: "e_point_plan", name: "ポイントプラン" }
+    ]
+  },
+  kanden: {
+    name: "関西電力",
+    plans: [
+      { code: "meter_rate_lighting_a", name: "従量電灯A" },
+      { code: "e_time_plan", name: "はぴeタイムR" }
+    ]
+  }
+};
+
+const currentProvider = document.getElementById('currentProvider');
+const currentPlan = document.getElementById('currentPlan');
+
+// 【修正 3】電力会社選択時の連動処理
+currentProvider.addEventListener('change', function() {
+  const selectedProvider = this.value;
+  // プランのプルダウンをリセット
+  currentPlan.innerHTML = '<option value="" disabled selected>プランを選択してください</option>';
+  currentPlan.disabled = true; // 一旦無効化
+
+  if (providersAndPlans[selectedProvider]) {
+    // 選択された電力会社のプランをプルダウンに追加
+    providersAndPlans[selectedProvider].plans.forEach(plan => {
+      const option = document.createElement('option');
+      option.value = plan.code; // プランのコードをvalueに設定
+      option.textContent = plan.name;
+      currentPlan.appendChild(option);
+    });
+    currentPlan.disabled = false; // 有効化
+  }
+});
+
 document.getElementById('simulationForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   
   const postcode = document.getElementById('postcode').value;
-  const currentPlanCode = document.getElementById('currentPlanCode').value;
+  const currentPlanCode = currentPlan.value; // 分割されたプランのプルダウンから取得
   const amperage = parseInt(document.getElementById('amperage').value);
   const month = parseInt(document.getElementById('month').value);
   const bill = parseInt(document.getElementById('bill').value);
@@ -97,12 +183,8 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
-  // 【最重要修正 1】
-  // 仕様書：「latest_year_month で指定した年月から降順」
-  // 1ヶ月分の料金入力なので、配列の先頭[0]に入力値をセットし、残りは仕様通り空文字("")にする
   const monthly_values = [String(bill), "", "", "", "", "", "", "", "", "", "", ""];
 
-  // 対象年月（YYYYMM）の作成（未来の月を選んだ場合は昨年の年にする）
   let targetYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   if (month > currentMonth) {
@@ -118,7 +200,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     holiday_night_usage_percentage: 55,
     number_of_family: 3,
     elec: {
-      current_plan_code: currentPlanCode,
+      current_plan_code: currentPlanCode, // ここに取得したプランコードをセット
       target_plan_codes: [
         "czkxj|hzozmtmvoztgdbcodibtw-czkxj",
         "nvhkgzvbvn|hzozmtmvoztgdbcodibtw-czkxj",
@@ -127,9 +209,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
       contract_ampere: amperage,
       unit_type: 1, // 1:契約アンペア(A)
       power_factor: 85,
-      // 【最重要修正 2】
-      // 仕様書：「1:料金, 2:使用量」 今回は電気代(料金)なので 1 を設定
-      monthly_type: 1, 
+      monthly_type: 1, // 1:料金
       monthly_values: monthly_values,
       latest_year_month: latestYearMonth,
       use_profiler: true, 
