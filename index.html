@@ -97,11 +97,12 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
-  // 【最重要修正】nullではなく "0" の文字列で12ヶ月分を埋める
-  const monthly_values = Array(12).fill("0");
-  monthly_values[month - 1] = String(bill);
+  // 【最重要修正 1】
+  // 仕様書：「latest_year_month で指定した年月から降順」
+  // 1ヶ月分の料金入力なので、配列の先頭[0]に入力値をセットし、残りは仕様通り空文字("")にする
+  const monthly_values = [String(bill), "", "", "", "", "", "", "", "", "", "", ""];
 
-  // 【追加修正】未来の月を選択した場合（現在3月で10月を選択等）は去年の年を指定する
+  // 対象年月（YYYYMM）の作成（未来の月を選んだ場合は昨年の年にする）
   let targetYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   if (month > currentMonth) {
@@ -124,9 +125,11 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
         "nvhkgzvbvn|hzozmtmvoztgdbcodibtwtb-czkxj"
       ],
       contract_ampere: amperage,
-      unit_type: 1,
+      unit_type: 1, // 1:契約アンペア(A)
       power_factor: 85,
-      monthly_type: 2, 
+      // 【最重要修正 2】
+      // 仕様書：「1:料金, 2:使用量」 今回は電気代(料金)なので 1 を設定
+      monthly_type: 1, 
       monthly_values: monthly_values,
       latest_year_month: latestYearMonth,
       use_profiler: true, 
@@ -160,7 +163,6 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
       throw new Error('シミュレーション可能なプランが見つかりませんでした。');
     }
 
-    // 複数のプランから一番節約額が大きいものを探す
     let bestPlan = data.target_plans[0].elec;
     for (const plan of data.target_plans) {
       if ((plan.elec.year_saving || 0) > (bestPlan.year_saving || 0)) {
