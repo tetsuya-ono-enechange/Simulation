@@ -5,96 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>電気のプラン変更お申し込み | ENECHANGE</title>
     <style>
-        :root { --c1: #e56000; --c2: #d93025; --c-bg: #f4f5f7; }
-        body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: var(--c-bg); color: #333; padding: 20px; margin: 0; }
+        :root { --brand-orange: #e56000; --rikuden-blue: #005aa0; --bg-gray: #f4f5f7; }
+        body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: var(--bg-gray); color: #333; padding: 0; margin: 0; }
         
-        .banner-container { width: 100%; max-width: 800px; margin: 0 auto 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .banner-container img { width: 100%; height: auto; display: block; }
+        /* ヘッダー */
+        header { background: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rikuden-blue); }
+        .header-logo { font-weight: bold; font-size: 1.2rem; color: var(--rikuden-blue); }
+        .powered-by { font-size: 0.7rem; text-align: right; color: #666; }
+        .powered-by span { display: block; font-style: italic; font-weight: bold; color: #333; }
 
-        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.5rem; text-align: center; color: var(--c1); margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        h2 { font-size: 1.1rem; color: #555; margin-top: 30px; border-left: 4px solid var(--c1); padding-left: 10px; }
-
-        /* スキャン機能用スタイル */
-        .scan-card { background: #f9f9f9; padding: 20px; border-radius: 12px; border: 1px dashed #ccc; text-align: center; margin-bottom: 25px; }
-        #f1 { display: none; }
-        .btn-scan { background-color: var(--c1); color: white; padding: 12px 24px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; transition: 0.2s; margin: 10px 0; }
-        .btn-scan:active { transform: scale(0.95); }
-        #ld { display: none; font-weight: bold; color: var(--c1); margin: 10px 0; }
-        #pv { width: 100%; max-width: 300px; border-radius: 8px; margin-top: 15px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
-        .err-msg { color: var(--c2); background: #fce8e6; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; margin-top: 10px; }
+        .container { max-width: 600px; margin: 20px auto; background: #fff; padding: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .form-content { padding: 30px; }
+        
+        h1 { font-size: 1.3rem; text-align: center; color: #333; margin: 20px 0; }
+        .section-title { background: #eef2f7; padding: 10px 15px; font-size: 1rem; font-weight: bold; border-left: 4px solid var(--rikuden-blue); margin: 30px 0 20px; }
 
         /* フォーム共通スタイル */
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 25px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
-        .required { color: #fff; background: #d9534f; font-size: 0.7rem; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
-        input[type="text"], input[type="tel"], input[type="email"], select { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        input.ok { border-color: #28a745; background-color: #f8fff9; }
+        .required { color: #fff; background: #d9534f; font-size: 0.7rem; padding: 2px 5px; border-radius: 3px; margin-left: 5px; vertical-align: middle; }
+        
+        input[type="text"], input[type="tel"], input[type="email"], select { 
+            width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+        }
+        input.ok { border: 2px solid #28a745; background-color: #f8fff9; }
 
-        .btn-submit { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: var(--c1); border: none; border-radius: 30px; cursor: pointer; margin-top: 20px; }
-        .btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
+        /* スキャン機能セクション（住所の下に配置） */
+        .scan-card { background: #fff8f3; padding: 20px; border-radius: 8px; border: 1px dashed var(--brand-orange); text-align: center; margin-top: 10px; }
+        #f1 { display: none; }
+        .btn-scan { background-color: var(--brand-orange); color: white; padding: 12px 20px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.9rem; margin: 10px 0; }
+        #ld { display: none; font-weight: bold; color: var(--brand-orange); margin: 10px 0; }
+        #pv { width: 100%; max-width: 250px; border-radius: 8px; margin-top: 15px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
+        .err-msg { color: #d93025; background: #fce8e6; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; margin-top: 10px; }
+
+        .btn-submit { width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: var(--rikuden-blue); border: none; border-radius: 4px; cursor: pointer; margin-top: 40px; }
+        
+        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #666; }
     </style>
 </head>
 <body>
 
-    <div class="banner-container">
-        <img src="https://raw.githubusercontent.com/tetsuya-ono-enechange/Simulation/refs/heads/main/enechange_banner.png.png" alt="ENECHANGEでんき">
-    </div>
+    <header>
+        <div class="header-logo">北陸電力</div>
+        <div class="powered-by">Powered by <span>ENECHANGE</span></div>
+    </header>
 
     <div class="container">
-        <h1>お申し込み情報の入力</h1>
+        <div class="form-content">
+            <h1>電気のプラン変更お申し込み</h1>
 
-        <div class="scan-card">
-            <h2>📷 検針票をスキャンして自動入力</h2>
-            <p style="font-size: 0.85rem; color: #666;">供給地点特定番号を写真から自動読み取りします。</p>
-            <label for="f1" class="btn-scan"> 撮影・画像を選択 </label>
-            <input type="file" id="f1" accept="image/*" capture="environment">
-            <div id="ld">⏳ 解析中...</div>
-            <div id="scan-err" class="err-msg"></div>
-            <img id="pv">
+            <form id="applyForm">
+                <div class="section-title">お申し込みプラン</div>
+                <div class="form-group">
+                    <label>お申し込み内容</label>
+                    <input type="text" id="selectedPlanDisplay" value="使っておとくライト" readonly style="background:#f9f9f9; border-color:#eee;">
+                </div>
+
+                <div class="section-title">ご契約名義・ご住所</div>
+                <div class="form-group">
+                    <label>お名前 <span class="required">必須</span></label>
+                    <input type="text" id="name" placeholder="例：小野 哲也" required>
+                </div>
+
+                <div class="form-group">
+                    <label>お電話番号 <span class="required">必須</span></label>
+                    <input type="tel" id="phone" placeholder="例：08012345678" required>
+                </div>
+
+                <div class="form-group">
+                    <label>ご住所 <span class="required">必須</span></label>
+                    <input type="text" id="address" placeholder="例：石川県金沢市榎尾町１" required>
+                </div>
+
+                <div class="scan-card">
+                    <label style="color:var(--brand-orange); font-size:1rem;">📷 検針票から番号を自動入力</label>
+                    <p style="font-size: 0.8rem; color: #666; margin: 5px 0;">検針票を撮影すると「供給地点特定番号」を自動で読み取ります。</p>
+                    <label for="f1" class="btn-scan">撮影・画像を選択</label>
+                    <input type="file" id="f1" accept="image/*" capture="environment">
+                    <div id="ld">⏳ 解析中...</div>
+                    <div id="scan-err" class="err-msg"></div>
+                    <img id="pv">
+                </div>
+
+                <div class="section-title">供給地点特定番号</div>
+                <div class="form-group">
+                    <label>供給地点特定番号 (22桁) <span class="required">必須</span></label>
+                    <input type="text" id="d1" placeholder="スキャンするか直接入力してください" required maxlength="22">
+                </div>
+
+                <div class="form-group">
+                    <label>メールアドレス <span class="required">必須</span></label>
+                    <input type="email" id="email" placeholder="例：example@enechange.co.jp" required>
+                </div>
+
+                <button type="submit" class="btn-submit">確認画面へ進む</button>
+            </form>
         </div>
-
-        <form id="applyForm">
-            <div class="form-group">
-                <label>供給地点特定番号 (22桁) <span class="required">必須</span></label>
-                <input type="text" id="d1" placeholder="スキャンするか直接入力してください" required maxlength="22">
-            </div>
-
-            <h2>お客さま情報</h2>
-            <div class="form-group">
-                <label>お名前 <span class="required">必須</span></label>
-                <input type="text" id="name" placeholder="例：小野 哲也" required>
-            </div>
-
-            <div class="form-group">
-                <label>お電話番号 <span class="required">必須</span></label>
-                <input type="tel" id="phone" placeholder="例：08012345678" required>
-            </div>
-
-            <div class="form-group">
-                <label>メールアドレス <span class="required">必須</span></label>
-                <input type="email" id="email" placeholder="例：example@enechange.co.jp" required>
-            </div>
-
-            <div class="form-group">
-                <label>ご住所 <span class="required">必須</span></label>
-                <input type="text" id="address" placeholder="例：石川県金沢市榎尾町１" required>
-            </div>
-
-            <button type="submit" class="btn-submit">確認画面へ進む</button>
-        </form>
     </div>
 
+    <footer>
+        &copy; Hokuriku Electric Power Company. All Rights Reserved.
+    </footer>
+
 <script>
+    // URLパラメータからプラン名を受け取る処理
+    const params = new URLSearchParams(window.location.search);
+    const planName = params.get('plan_name');
+    if (planName) {
+        document.getElementById('selectedPlanDisplay').value = decodeURIComponent(planName);
+    }
+
     (function(){
-        // Google Vision API Key (提供されたものを維持)
         const _0x_k = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
-        
-        const _v1 = document.getElementById('f1'); // file input
-        const _v2 = document.getElementById('ld'); // loading
-        const _v3 = document.getElementById('scan-err'); // error
-        const _v4 = document.getElementById('d1'); // result input
-        const _v6 = document.getElementById('pv'); // preview image
+        const _v1 = document.getElementById('f1');
+        const _v2 = document.getElementById('ld');
+        const _v3 = document.getElementById('scan-err');
+        const _v4 = document.getElementById('d1');
+        const _v6 = document.getElementById('pv');
 
         _v1.addEventListener('change', async (e) => {
             const _file = e.target.files[0];
@@ -104,7 +131,6 @@
             _v2.style.display = 'block';
             _v4.classList.remove('ok');
             
-            // プレビュー表示
             const _rd = new FileReader();
             _rd.onload = (f) => {
                 _v6.src = f.target.result;
@@ -126,27 +152,26 @@
                 });
 
                 const _data = await _res.json();
-                if (_data.error) throw new Error("API通信に失敗しました。");
+                if (_data.error) throw new Error("API通信エラー");
 
                 const _rs = _data.responses[0];
                 if (_rs && _rs.fullTextAnnotation) {
                     const _tx = _rs.fullTextAnnotation.text;
-                    // スペースや改行を除去して22桁の数字を探す
                     const _cl = _tx.replace(/[\s\n-]/g, '');
                     const _m = _cl.match(/\d{22}/);
 
                     if (_m) {
                         _v4.value = _m[0];
                         _v4.classList.add('ok');
-                        alert("番号を読み取りました！");
+                        alert("供給地点特定番号を読み取りました。");
                     } else {
-                        throw new Error("22桁の番号が見つかりませんでした。直接入力をお願いします。");
+                        throw new Error("22桁の番号が見つかりませんでした。手入力をお願いします。");
                     }
                 } else {
                     throw new Error("文字を認識できませんでした。");
                 }
             } catch (err) {
-                _v3.innerText = "エラー: " + err.message;
+                _v3.innerText = "通知: " + err.message;
                 _v3.style.display = 'block';
             } finally {
                 _v2.style.display = 'none';
@@ -163,10 +188,9 @@
         }
     })();
 
-    // フォーム送信（ダミー）
     document.getElementById('applyForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        alert("確認画面の生成、または送信処理へ移ります。");
+        alert("お申し込み内容の送信、または確認画面へ遷移します。");
     });
 </script>
 </body>
