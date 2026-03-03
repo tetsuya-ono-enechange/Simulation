@@ -1,244 +1,173 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電気のプラン変更お申し込み | ENECHANGE</title>
-  <style>
-    body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: #f4f5f7; color: #333; padding: 20px; margin: 0; }
-    
-    .banner-container {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto 20px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .banner-container img { width: 100%; height: auto; display: block; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電気のプラン変更お申し込み | ENECHANGE</title>
+    <style>
+        :root { --c1: #e56000; --c2: #d93025; --c-bg: #f4f5f7; }
+        body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: var(--c-bg); color: #333; padding: 20px; margin: 0; }
+        
+        .banner-container { width: 100%; max-width: 800px; margin: 0 auto 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .banner-container img { width: 100%; height: auto; display: block; }
 
-    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h1 { font-size: 1.5rem; text-align: center; color: #e56000; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-    
-    .progress-bar { display: flex; justify-content: space-between; margin-bottom: 30px; font-weight: bold; color: #ccc; }
-    .progress-step { flex: 1; text-align: center; position: relative; }
-    .progress-step::after { content: ''; position: absolute; top: 50%; right: -50%; width: 100%; height: 2px; background: #eee; z-index: 1; }
-    .progress-step:last-child::after { display: none; }
-    .progress-step.active { color: #e56000; }
-    .progress-step.active::after { background: #e56000; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.5rem; text-align: center; color: var(--c1); margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        h2 { font-size: 1.1rem; color: #555; margin-top: 30px; border-left: 4px solid var(--c1); padding-left: 10px; }
 
-    .form-group { margin-bottom: 20px; }
-    label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
-    label .required { color: #fff; background: #d9534f; font-size: 0.7rem; padding: 2px 5px; border-radius: 3px; margin-left: 5px; vertical-align: text-top;}
-    
-    input[type="text"], input[type="tel"], input[type="email"], select { 
-      width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
-    }
-    .flex-row { display: flex; gap: 10px; }
-    .flex-row > div { flex: 1; }
+        /* スキャン機能用スタイル */
+        .scan-card { background: #f9f9f9; padding: 20px; border-radius: 12px; border: 1px dashed #ccc; text-align: center; margin-bottom: 25px; }
+        #f1 { display: none; }
+        .btn-scan { background-color: var(--c1); color: white; padding: 12px 24px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; transition: 0.2s; margin: 10px 0; }
+        .btn-scan:active { transform: scale(0.95); }
+        #ld { display: none; font-weight: bold; color: var(--c1); margin: 10px 0; }
+        #pv { width: 100%; max-width: 300px; border-radius: 8px; margin-top: 15px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
+        .err-msg { color: var(--c2); background: #fce8e6; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; margin-top: 10px; }
 
-    .btn-submit, .btn-back { 
-      width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 30px; cursor: pointer; transition: background 0.3s; margin-bottom: 10px;
-    }
-    .btn-submit { color: #fff; background-color: #e56000; }
-    .btn-submit:hover:not(:disabled) { background-color: #cc5500; }
-    .btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
-    .btn-back { color: #333; background-color: #eee; }
-    .btn-back:hover { background-color: #ddd; }
+        /* フォーム共通スタイル */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; }
+        .required { color: #fff; background: #d9534f; font-size: 0.7rem; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+        input[type="text"], input[type="tel"], input[type="email"], select { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        input.ok { border-color: #28a745; background-color: #f8fff9; }
 
-    /* 確認画面用のスタイル */
-    .confirm-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dotted #ccc; }
-    .confirm-label { font-size: 0.8rem; color: #666; margin-bottom: 5px; }
-    .confirm-value { font-size: 1rem; font-weight: bold; }
-
-    .terms-box { background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85rem;}
-    .checkbox-wrap { display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; font-weight: bold;}
-    .checkbox-wrap input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer;}
-    
-    /* 画面切り替え用 */
-    #step-input { display: block; }
-    #step-confirm { display: none; }
-    #step-complete { display: none; text-align: center; padding: 50px 0;}
-  </style>
+        .btn-submit { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: var(--c1); border: none; border-radius: 30px; cursor: pointer; margin-top: 20px; }
+        .btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
 </head>
 <body>
 
-  <div class="banner-container">
-    <img src="https://raw.githubusercontent.com/tetsuya-ono-enechange/Simulation/refs/heads/main/enechange_banner.png.png" alt="ENECHANGEでんき イメージバナー">
-  </div>
-
-<div class="container">
-  <h1>電気のプラン変更お申し込み</h1>
-  
-  <div class="progress-bar">
-    <div class="progress-step active" id="indicator-input">入力</div>
-    <div class="progress-step" id="indicator-confirm">確認</div>
-    <div class="progress-step" id="indicator-complete">完了</div>
-  </div>
-
-  <div id="step-input">
-    <form id="applyForm">
-      
-      <div class="form-group">
-        <label>お申し込みプラン <span class="required">必須</span></label>
-        <input type="text" value="使っておとくライト" readonly style="background:#f0f0f0;">
-      </div>
-
-      <div class="form-group">
-        <label>ご契約名義・ご住所 <span class="required">必須</span></label>
-        <div class="flex-row" style="margin-bottom: 10px;">
-          <div><input type="text" id="lastName" placeholder="姓（例：小野）" required></div>
-          <div><input type="text" id="firstName" placeholder="名（例：哲也）" required></div>
-        </div>
-        <div class="flex-row" style="margin-bottom: 10px;">
-          <div><input type="text" id="lastNameKana" placeholder="セイ（例：オノ）" required></div>
-          <div><input type="text" id="firstNameKana" placeholder="メイ（例：テツヤ）" required></div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="phone">お電話番号 <span class="required">必須</span></label>
-        <input type="tel" id="phone" placeholder="例：08012345678（ハイフンなし）" required>
-      </div>
-
-      <div class="form-group">
-        <label for="email">メールアドレス <span class="required">必須</span></label>
-        <input type="email" id="email" placeholder="例：example@enechange.co.jp" required>
-      </div>
-
-      <div class="form-group">
-        <label for="postcode">郵便番号 <span class="required">必須</span></label>
-        <input type="text" id="postcode" placeholder="例：9200112（ハイフンなし）" required>
-      </div>
-
-      <div class="form-group">
-        <label for="address">ご住所 <span class="required">必須</span></label>
-        <input type="text" id="address" placeholder="例：石川県金沢市榎尾町１" required>
-      </div>
-
-      <div class="form-group">
-        <label for="customerNum">現在のお客さま番号 <span class="required">必須</span></label>
-        <input type="text" id="customerNum" placeholder="検針票に記載の番号をご入力ください" required>
-      </div>
-
-      <button type="submit" class="btn-submit">確認画面へ進む</button>
-    </form>
-  </div>
-
-  <div id="step-confirm">
-    <p style="font-size: 0.9rem; margin-bottom: 20px;">ご入力内容をご確認いただき、よろしければ規約に同意のうえ「お申し込み内容を送信する」ボタンを押してください。</p>
-    
-    <div style="background:#f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-      <div class="confirm-item">
-        <div class="confirm-label">お名前</div>
-        <div class="confirm-value" id="c-name"></div>
-      </div>
-      <div class="confirm-item">
-        <div class="confirm-label">お名前（カナ）</div>
-        <div class="confirm-value" id="c-nameKana"></div>
-      </div>
-      <div class="confirm-item">
-        <div class="confirm-label">お電話番号</div>
-        <div class="confirm-value" id="c-phone"></div>
-      </div>
-      <div class="confirm-item">
-        <div class="confirm-label">メールアドレス</div>
-        <div class="confirm-value" id="c-email"></div>
-      </div>
-      <div class="confirm-item">
-        <div class="confirm-label">ご住所</div>
-        <div class="confirm-value" id="c-addressFull"></div>
-      </div>
-      <div class="confirm-item" style="border:none; margin-bottom:0; padding-bottom:0;">
-        <div class="confirm-label">お客さま番号</div>
-        <div class="confirm-value" id="c-customerNum"></div>
-      </div>
+    <div class="banner-container">
+        <img src="https://raw.githubusercontent.com/tetsuya-ono-enechange/Simulation/refs/heads/main/enechange_banner.png.png" alt="ENECHANGEでんき">
     </div>
 
-    <div class="terms-box">
-      <h4 style="margin-top:0;">ご契約に関わる重要事項のご確認</h4>
-      <p>電気事業法に従い電気需給契約締結前・締結後に行う供給条件の説明を含みます。内容をご確認ください。</p>
-      <div class="checkbox-wrap">
-        <input type="checkbox" id="agreeTerms">
-        <label for="agreeTerms" style="font-size:1rem; cursor:pointer;">上記の内容を確認し、同意します。</label>
-      </div>
+    <div class="container">
+        <h1>お申し込み情報の入力</h1>
+
+        <div class="scan-card">
+            <h2>📷 検針票をスキャンして自動入力</h2>
+            <p style="font-size: 0.85rem; color: #666;">供給地点特定番号を写真から自動読み取りします。</p>
+            <label for="f1" class="btn-scan"> 撮影・画像を選択 </label>
+            <input type="file" id="f1" accept="image/*" capture="environment">
+            <div id="ld">⏳ 解析中...</div>
+            <div id="scan-err" class="err-msg"></div>
+            <img id="pv">
+        </div>
+
+        <form id="applyForm">
+            <div class="form-group">
+                <label>供給地点特定番号 (22桁) <span class="required">必須</span></label>
+                <input type="text" id="d1" placeholder="スキャンするか直接入力してください" required maxlength="22">
+            </div>
+
+            <h2>お客さま情報</h2>
+            <div class="form-group">
+                <label>お名前 <span class="required">必須</span></label>
+                <input type="text" id="name" placeholder="例：小野 哲也" required>
+            </div>
+
+            <div class="form-group">
+                <label>お電話番号 <span class="required">必須</span></label>
+                <input type="tel" id="phone" placeholder="例：08012345678" required>
+            </div>
+
+            <div class="form-group">
+                <label>メールアドレス <span class="required">必須</span></label>
+                <input type="email" id="email" placeholder="例：example@enechange.co.jp" required>
+            </div>
+
+            <div class="form-group">
+                <label>ご住所 <span class="required">必須</span></label>
+                <input type="text" id="address" placeholder="例：石川県金沢市榎尾町１" required>
+            </div>
+
+            <button type="submit" class="btn-submit">確認画面へ進む</button>
+        </form>
     </div>
-
-    <button type="button" class="btn-submit" id="btn-final-submit" disabled>お申し込み内容を送信する</button>
-    <button type="button" class="btn-back" id="btn-back">入力画面へ戻る</button>
-  </div>
-
-  <div id="step-complete">
-    <h2 style="color:#e56000; font-size: 1.8rem; margin-bottom: 10px;">お申し込み<br>ありがとうございました。</h2>
-    <p>ご入力いただいたメールアドレス宛に、<br>受付完了メールを送信いたしました。</p>
-    <a href="index.html" style="display:inline-block; margin-top:30px; color:#e56000; text-decoration:underline;">シミュレーションTOPへ戻る</a>
-  </div>
-
-</div>
 
 <script>
-  // 要素の取得
-  const stepInput = document.getElementById('step-input');
-  const stepConfirm = document.getElementById('step-confirm');
-  const stepComplete = document.getElementById('step-complete');
-  
-  const indInput = document.getElementById('indicator-input');
-  const indConfirm = document.getElementById('indicator-confirm');
-  const indComplete = document.getElementById('indicator-complete');
+    (function(){
+        // Google Vision API Key (提供されたものを維持)
+        const _0x_k = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
+        
+        const _v1 = document.getElementById('f1'); // file input
+        const _v2 = document.getElementById('ld'); // loading
+        const _v3 = document.getElementById('scan-err'); // error
+        const _v4 = document.getElementById('d1'); // result input
+        const _v6 = document.getElementById('pv'); // preview image
 
-  const applyForm = document.getElementById('applyForm');
-  const btnBack = document.getElementById('btn-back');
-  const agreeTerms = document.getElementById('agreeTerms');
-  const btnFinalSubmit = document.getElementById('btn-final-submit');
+        _v1.addEventListener('change', async (e) => {
+            const _file = e.target.files[0];
+            if (!_file) return;
 
-  // 入力画面 → 確認画面
-  applyForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // 入力値を確認画面にバインド
-    document.getElementById('c-name').textContent = `${document.getElementById('lastName').value} ${document.getElementById('firstName').value}`;
-    document.getElementById('c-nameKana').textContent = `${document.getElementById('lastNameKana').value} ${document.getElementById('firstNameKana').value}`;
-    document.getElementById('c-phone').textContent = document.getElementById('phone').value;
-    document.getElementById('c-email').textContent = document.getElementById('email').value;
-    document.getElementById('c-addressFull').textContent = `〒${document.getElementById('postcode').value} ${document.getElementById('address').value}`;
-    document.getElementById('c-customerNum').textContent = document.getElementById('customerNum').value;
+            _v3.style.display = 'none';
+            _v2.style.display = 'block';
+            _v4.classList.remove('ok');
+            
+            // プレビュー表示
+            const _rd = new FileReader();
+            _rd.onload = (f) => {
+                _v6.src = f.target.result;
+                _v6.style.display = 'block';
+            };
+            _rd.readAsDataURL(_file);
 
-    // 画面切り替え
-    stepInput.style.display = 'none';
-    stepConfirm.style.display = 'block';
-    indConfirm.classList.add('active');
-  });
+            try {
+                const _b6 = await _f_b6(_file);
+                const _res = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${_0x_k}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requests: [{
+                            image: { content: _b6.split(',')[1] },
+                            features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
+                        }]
+                    })
+                });
 
-  // 確認画面 → 入力画面（戻る）
-  btnBack.addEventListener('click', function() {
-    stepConfirm.style.display = 'none';
-    stepInput.style.display = 'block';
-    indConfirm.classList.remove('active');
-    
-    // 同意チェックを外しておく
-    agreeTerms.checked = false;
-    btnFinalSubmit.disabled = true;
-  });
+                const _data = await _res.json();
+                if (_data.error) throw new Error("API通信に失敗しました。");
 
-  // 規約同意チェックボックスの連動
-  agreeTerms.addEventListener('change', function() {
-    btnFinalSubmit.disabled = !this.checked;
-    if(this.checked) {
-      btnFinalSubmit.textContent = "お申し込み内容を送信する";
-    } else {
-      btnFinalSubmit.textContent = "規約に同意してください";
-    }
-  });
+                const _rs = _data.responses[0];
+                if (_rs && _rs.fullTextAnnotation) {
+                    const _tx = _rs.fullTextAnnotation.text;
+                    // スペースや改行を除去して22桁の数字を探す
+                    const _cl = _tx.replace(/[\s\n-]/g, '');
+                    const _m = _cl.match(/\d{22}/);
 
-  // 確認画面 → 完了画面（送信）
-  btnFinalSubmit.addEventListener('click', function() {
-    // ※本来はここでAPIにデータをPOSTします。今回はモック動作。
-    
-    // 画面切り替え
-    stepConfirm.style.display = 'none';
-    stepComplete.style.display = 'block';
-    indComplete.classList.add('active');
-  });
+                    if (_m) {
+                        _v4.value = _m[0];
+                        _v4.classList.add('ok');
+                        alert("番号を読み取りました！");
+                    } else {
+                        throw new Error("22桁の番号が見つかりませんでした。直接入力をお願いします。");
+                    }
+                } else {
+                    throw new Error("文字を認識できませんでした。");
+                }
+            } catch (err) {
+                _v3.innerText = "エラー: " + err.message;
+                _v3.style.display = 'block';
+            } finally {
+                _v2.style.display = 'none';
+            }
+        });
+
+        function _f_b6(f) {
+            return new Promise((r, j) => {
+                const a = new FileReader();
+                a.readAsDataURL(f);
+                a.onload = () => r(a.result);
+                a.onerror = e => j(e);
+            });
+        }
+    })();
+
+    // フォーム送信（ダミー）
+    document.getElementById('applyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert("確認画面の生成、または送信処理へ移ります。");
+    });
 </script>
 </body>
 </html>
