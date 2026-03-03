@@ -29,11 +29,6 @@
     input[type="number"], select, input[type="text"] { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
     .btn-submit { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: #e56000; border: none; border-radius: 30px; cursor: pointer; transition: background 0.3s; }
     .btn-submit:hover { background-color: #cc5500; }
-    
-    /* 追加：お申し込みボタン用のスタイル */
-    .btn-apply { display: inline-block; width: 100%; padding: 15px; background: #e56000; color: #fff; text-decoration: none; text-align: center; font-weight: bold; border-radius: 30px; box-sizing: border-box; transition: background 0.3s; }
-    .btn-apply:hover { background: #cc5500; }
-
     #resultArea { margin-top: 30px; padding: 20px; background: #fff8f3; border: 1px solid #ffccaa; border-radius: 8px; display: none; }
     .loading { text-align: center; display: none; color: #666; margin-top: 20px; font-weight: bold; }
     .error-msg { color: #d9534f; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
@@ -69,7 +64,7 @@
       <label for="currentPlan">現在のプラン</label>
       <select id="currentPlan" required disabled>
         <option value="" disabled selected>電力会社を先に選択してください</option>
-      </select>
+        </select>
     </div>
 
     <div class="form-group">
@@ -108,13 +103,10 @@
     <h2 style="font-size:1.2rem; color:#333; margin-top:0;">シミュレーション結果</h2>
     <p style="margin-bottom: 5px; font-size: 0.9rem;">おすすめのプランに切り替えると...</p>
     <p style="font-size:1.6rem; font-weight:bold; color:#d9534f; margin:0 0 15px 0;" id="savingsText"></p>
-    
-    <div style="background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #eee; margin-bottom: 20px;">
+    <div style="background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
       <p style="margin: 0; font-size: 0.9rem; color: #666;">おすすめプラン</p>
       <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem;" id="planDetails"></p>
     </div>
-
-    <a href="apply.html" id="applyLinkBtn" class="btn-apply">このプランに申し込む</a>
   </div>
 </div>
 
@@ -157,8 +149,9 @@ const currentPlan = document.getElementById('currentPlan');
 // 電力会社選択時の連動処理
 currentProvider.addEventListener('change', function() {
   const selectedProvider = this.value;
+  // プランのプルダウンをリセット
   currentPlan.innerHTML = '<option value="" disabled selected>プランを選択してください</option>';
-  currentPlan.disabled = true;
+  currentPlan.disabled = true; // 一旦無効化
 
   if (providersAndPlans[selectedProvider]) {
     providersAndPlans[selectedProvider].plans.forEach(plan => {
@@ -167,7 +160,7 @@ currentProvider.addEventListener('change', function() {
       option.textContent = plan.name;
       currentPlan.appendChild(option);
     });
-    currentPlan.disabled = false;
+    currentPlan.disabled = false; // 有効化
   }
 });
 
@@ -188,8 +181,10 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
+  // 入力された月の金額を先頭に、残りは空文字で埋める
   const monthly_values = [String(bill), "", "", "", "", "", "", "", "", "", "", ""];
 
+  // 対象年月（YYYYMM）の作成
   let targetYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   if (month > currentMonth) {
@@ -212,9 +207,9 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
         "nvhkgzvbvn|hzozmtmvoztgdbcodibtwtb-czkxj"
       ],
       contract_ampere: amperage,
-      unit_type: 1, 
+      unit_type: 1, // 1:契約アンペア(A)
       power_factor: 85,
-      monthly_type: 1, 
+      monthly_type: 1, // 1:料金
       monthly_values: monthly_values,
       latest_year_month: latestYearMonth,
       use_profiler: true, 
@@ -248,6 +243,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
       throw new Error('シミュレーション可能なプランが見つかりませんでした。');
     }
 
+    // 複数のプランから一番節約額が大きいものを探す
     let bestPlan = data.target_plans[0].elec;
     for (const plan of data.target_plans) {
       if ((plan.elec.year_saving || 0) > (bestPlan.year_saving || 0)) {
@@ -264,12 +260,6 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     }
     document.getElementById('planDetails').textContent = `${bestPlan.provider_name} - ${bestPlan.plan_name}`;
     
-    // 追加：おすすめプランのデータを安全にボタンのURL（パラメータ）にセットする
-    const applyLinkBtn = document.getElementById('applyLinkBtn');
-    if(applyLinkBtn) {
-      applyLinkBtn.href = `apply.html?plan_code=${bestPlan.plan_code}&plan_name=${encodeURIComponent(bestPlan.plan_name)}`;
-    }
-
     resultArea.style.display = 'block';
 
   } catch (error) {
