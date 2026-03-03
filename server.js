@@ -6,7 +6,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 const ENECHANGE_API_URL = 'https://emap-api.enechange.jp/simulation/v2/elec';
-const ENECHANGE_API_KEY = 'hvvLCbxFWwjJTRVt1zA15IqAwNYzy3rZ';
+const ENECHANGE_API_KEY = 'r7jCwxyBGThxS6EHvfmqFe9eSssfiePg';
 
 app.post('/api/simulate', async (req, res) => {
   try {
