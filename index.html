@@ -97,9 +97,82 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
-  // 12ヶ月分の配列を作成し、指定された月だけ金額を入れる（他は空文字）
+  // 12ヶ月分の配列を作成し、指定された月だけ金額を入れる
   const monthly_values = Array(12).fill("");
   monthly_values[month - 1] = String(bill);
 
-  // 対象年月（YYYYMM）の作成（現在の年 + 選択された月）
-  const current
+  // 対象年月（YYYYMM）の作成
+  const currentYear = new Date().getFullYear();
+  const latestYearMonth = `${currentYear}${String(month).padStart(2, '0')}`;
+
+  const apiPayload = {
+    request_id: `req_${Date.now()}`,
+    postcode: postcode,
+    all_electric: false,
+    weekday_night_usage_percentage: 75,
+    holiday_night_usage_percentage: 55,
+    number_of_family: 3,
+    elec: {
+      current_plan_code: currentPlanCode,
+      target_plan_codes: [
+        "czkxj|hzozmtmvoztgdbcodibtw-czkxj",
+        "nvhkgzvbvn|hzozmtmvoztgdbcodibtw-czkxj",
+        "nvhkgzvbvn|hzozmtmvoztgdbcodibtwtb-czkxj"
+      ],
+      contract_ampere: amperage,
+      unit_type: 1,
+      power_factor: 85,
+      monthly_type: 2, 
+      monthly_values: monthly_values,
+      latest_year_month: latestYearMonth,
+      use_profiler: true, 
+      weekday_usage_percentage: 65,
+      weekday_daytime_usage_percentage: 25,
+      holiday_daytime_usage_percentage: 25,
+      daytime_from: 8,
+      nighttime_from: 20,
+      profiler_options: null
+    }
+  };
+
+  try {
+    const response = await fetch('https://stg-emap-api.enechange.jp/simulation/v2/elec', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        // 【最重要修正箇所】判明した正規のカスタムヘッダーを指定
+        'X-EMAP-USER-KEY': 'r7jCwxyBGThxS6EHvfmqFe9eSssfiePg' 
+      },
+      body: JSON.stringify(apiPayload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("API Error Data:", data);
+      throw new Error(data.error || data.message || `APIエラー (ステータスコード: ${response.status})`);
+    }
+
+    if (!data.target_plans || data.target_plans.length === 0) {
+      throw new Error('シミュレーション可能なプランが見つかりませんでした。');
+    }
+
+    // 結果の反映
+    const bestPlan = data.target_plans[0].elec;
+    const savingAmount = bestPlan.year_saving || 0;
+
+    document.getElementById('savingsText').textContent = `年間 約 ${savingAmount.toLocaleString()} 円 おトク！`;
+    document.getElementById('planDetails').textContent = `${bestPlan.provider_name} - ${bestPlan.plan_name}`;
+    
+    resultArea.style.display = 'block';
+
+  } catch (error) {
+    errorMessage.textContent = 'シミュレーションに失敗しました: ' + error.message;
+    console.error(error);
+  } finally {
+    loadingText.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
