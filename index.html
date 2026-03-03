@@ -10,16 +10,16 @@
     /* バナーコンテナのスタイル */
     .banner-container {
       width: 100%;
-      max-width: 800px; /* 生成されたバナーの最大幅 */
-      margin: 0 auto 20px; /* 中央配置、下にマージン */
-      border-radius: 8px; /* 角丸 */
-      overflow: hidden; /* 角丸を効かせる */
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* 影 */
+      max-width: 800px;
+      margin: 0 auto 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     .banner-container img {
       width: 100%;
-      height: auto; /* アスペクト比を維持 */
-      display: block; /* 下の隙間をなくす */
+      height: auto;
+      display: block;
     }
 
     .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -37,7 +37,7 @@
 <body>
 
   <div class="banner-container">
-    <img src="enechange_banner.png" alt="ENECHANGEでんき イメージバナー">
+    <img src="https://raw.githubusercontent.com/tetsuya-ono-enechange/Simulation/refs/heads/main/enechange_banner.png.png" alt="ENECHANGEでんき イメージバナー">
   </div>
 
 <div class="container">
@@ -111,7 +111,7 @@
 </div>
 
 <script>
-// 電力会社とプランのサンプルデータ（連動用）
+// 電力会社とプランのサンプルデータ
 const providersAndPlans = {
   hepco: {
     name: "北海道電力",
@@ -154,10 +154,9 @@ currentProvider.addEventListener('change', function() {
   currentPlan.disabled = true; // 一旦無効化
 
   if (providersAndPlans[selectedProvider]) {
-    // 選択された電力会社のプランをプルダウンに追加
     providersAndPlans[selectedProvider].plans.forEach(plan => {
       const option = document.createElement('option');
-      option.value = plan.code; // プランのコードをvalueに設定
+      option.value = plan.code;
       option.textContent = plan.name;
       currentPlan.appendChild(option);
     });
@@ -169,7 +168,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   e.preventDefault();
   
   const postcode = document.getElementById('postcode').value;
-  const currentPlanCode = currentPlan.value; // 分割されたプランのプルダウンから取得
+  const currentPlanCode = currentPlan.value;
   const amperage = parseInt(document.getElementById('amperage').value);
   const month = parseInt(document.getElementById('month').value);
   const bill = parseInt(document.getElementById('bill').value);
@@ -182,8 +181,10 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
+  // 入力された月の金額を先頭に、残りは空文字で埋める
   const monthly_values = [String(bill), "", "", "", "", "", "", "", "", "", "", ""];
 
+  // 対象年月（YYYYMM）の作成
   let targetYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   if (month > currentMonth) {
@@ -199,7 +200,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     holiday_night_usage_percentage: 55,
     number_of_family: 3,
     elec: {
-      current_plan_code: currentPlanCode, // ここに取得したプランコードをセット
+      current_plan_code: currentPlanCode,
       target_plan_codes: [
         "czkxj|hzozmtmvoztgdbcodibtw-czkxj",
         "nvhkgzvbvn|hzozmtmvoztgdbcodibtw-czkxj",
@@ -242,6 +243,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
       throw new Error('シミュレーション可能なプランが見つかりませんでした。');
     }
 
+    // 複数のプランから一番節約額が大きいものを探す
     let bestPlan = data.target_plans[0].elec;
     for (const plan of data.target_plans) {
       if ((plan.elec.year_saving || 0) > (bestPlan.year_saving || 0)) {
