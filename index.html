@@ -97,7 +97,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
   resultArea.style.display = 'none';
   errorMessage.textContent = '';
 
-  // 【修正ポイント】12ヶ月分の配列を作成し、入力がない月は null にする
+  // 【修正ポイント】空文字 "" ではなく null で埋める
   const monthly_values = Array(12).fill(null);
   monthly_values[month - 1] = String(bill);
 
@@ -156,7 +156,7 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
       throw new Error('シミュレーション可能なプランが見つかりませんでした。');
     }
 
-    // 複数のターゲットプランの中から、一番節約額（year_saving）が大きいものを探す
+    // 複数のプランから一番節約額が大きいものを探す
     let bestPlan = data.target_plans[0].elec;
     for (const plan of data.target_plans) {
       if ((plan.elec.year_saving || 0) > (bestPlan.year_saving || 0)) {
@@ -166,7 +166,6 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
 
     const savingAmount = bestPlan.year_saving || 0;
 
-    // 画面に結果を表示
     if (savingAmount > 0) {
       document.getElementById('savingsText').textContent = `年間 約 ${savingAmount.toLocaleString()} 円 おトク！`;
     } else {
