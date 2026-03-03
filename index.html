@@ -269,6 +269,13 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     loadingText.style.display = 'none';
   }
 });
+
+// resultArea.style.display = 'block'; の直前などに追記
+const applyBtnHtml = `<div style="margin-top: 20px; text-align: center;">
+                        <a href="apply.html" style="display:inline-block; width:100%; padding:15px; background:#e56000; color:#fff; text-decoration:none; font-weight:bold; border-radius:30px; box-sizing:border-box;">このプランに申し込む</a>
+                      </div>`;
+document.getElementById('planDetails').insertAdjacentHTML('afterend', applyBtnHtml);
+  
 </script>
 </body>
 </html>
