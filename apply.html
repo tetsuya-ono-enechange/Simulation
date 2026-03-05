@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>電気のプラン変更お申し込み | ENECHANGE</title>
     <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-autokana@1.2.0/dist/vanilla-autokana.min.js"></script>
     <style>
         :root { --brand-orange: #e56000; --rikuden-blue: #005aa0; --bg-gray: #f4f5f7; }
         body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: var(--bg-gray); color: #333; padding: 0; margin: 0; }
@@ -40,6 +41,7 @@
         .scan-area { margin-top: 10px; text-align: center; background: #fff8f3; padding: 20px; border-radius: 6px; border: 1px dashed var(--brand-orange); }
         .scan-title { font-size: 0.9rem; font-weight: bold; color: var(--brand-orange); margin-bottom: 8px; }
         .btn-scan { background-color: var(--brand-orange); color: white; padding: 12px 20px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.85rem; }
+        #f1 { display: none; } /* ファイル入力フィールド本体は隠す */
         #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 10px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
 
         .btn-submit { width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: var(--rikuden-blue); border: none; border-radius: 4px; cursor: pointer; margin-top: 40px; }
@@ -49,7 +51,7 @@
 <body>
 
     <header>
-        <div class="header-logo">北陸電力</div>
+        <div class="header-logo">エネチェンジでんき</div>
         <div class="powered-by">Powered by <span>ENECHANGE</span></div>
     </header>
 
@@ -77,8 +79,8 @@
                     <div class="form-group">
                         <label>お名前 <span class="required">必須</span></label>
                         <div class="flex-box">
-                            <input type="text" id="lastName" placeholder="姓" required oninput="autoKana()">
-                            <input type="text" id="firstName" placeholder="名" required oninput="autoKana()">
+                            <input type="text" id="lastName" placeholder="姓" required>
+                            <input type="text" id="firstName" placeholder="名" required>
                         </div>
                         <div class="flex-box">
                             <input type="text" id="lastNameKana" placeholder="セイ" required>
@@ -121,8 +123,8 @@
                         <div class="scan-title">＜供給地点特定番号入力サポート＞</div>
                         <p class="note" style="margin-bottom:10px;">検針票を撮影もしくは画像をアップロードするだけで自動的に入力します。</p>
                         <label for="f1" class="btn-scan">検針票を撮影する／画像をアップロードする</label>
-                        <input type="file" id="f1" accept="image/*" capture="environment">
-                        <div id="ld">⏳ 解析中...</div>
+                        <input type="file" id="f1" accept="image/*" capture="camera">
+                        <div id="ld" style="display:none; margin-top:10px;">⏳ 解析中...</div>
                         <img id="pv">
                     </div>
                 </div>
@@ -142,22 +144,28 @@
         </div>
     </div>
 
-    <footer>&copy; Hokuriku Electric Power Company. All Rights Reserved.</footer>
+    <footer>&copy; Enechange Denki. All Rights Reserved.</footer>
 
 <script>
-    // プラン名・郵便番号の引き継ぎ
+    // プラン名・郵便番号の引き継ぎ & 自動カナ入力の初期化
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('plan_name')) {
             document.getElementById('selectedPlanDisplay').value = decodeURIComponent(params.get('plan_name'));
         }
-        // シミュレーション時の郵便番号があればセット（仮にpostcodeパラメータで渡る想定）
+        // シミュレーション時の郵便番号があればセット
         if (params.get('postcode')) {
             const pc = params.get('postcode');
             document.getElementById('postcode').value = pc;
-            // ライブラリによる自動検索を発火させるため
             const event = new Event('keyup', { bubbles: true });
             document.getElementById('postcode').dispatchEvent(event);
+        }
+
+        // vanilla-autokanaを使用したフリガナの自動入力（カタカナ指定）
+        if (typeof AutoKana !== 'undefined') {
+            AutoKana.bind('#lastName', '#lastNameKana', { katakana: true });
+            AutoKana.bind('#firstName', '#firstNameKana', { katakana: true });
+            AutoKana.bind('#corpName', '#corpNameKana', { katakana: true }); // 法人名にも適用
         }
     }
 
@@ -184,13 +192,6 @@
         }
     }
 
-    // オートフリガナ（簡易版）
-    // 本来は history 等を見る複雑な処理が必要ですが、ここでは標準的なカタカナ変換を補助的に実装
-    function autoKana() {
-        // 注: ブラウザの自動補完やIMEによっては、完全な自動取得には専用ライブラリ(jquery.autokanaなど)が必要な場合があります。
-        // ここではUXを損なわない範囲での簡易実装に留めます。
-    }
-
     // OCR処理ロジック
     (function(){
         const _0x_k = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
@@ -202,7 +203,7 @@
         _v1.addEventListener('change', async (e) => {
             const _file = e.target.files[0];
             if (!_file) return;
-            _v2.style.display = 'block';
+            _v2.style.display = 'block'; // 画像選択後に解析中を表示
             
             const _rd = new FileReader();
             _rd.onload = (f) => { _v6.src = f.target.result; _v6.style.display = 'block'; };
@@ -230,7 +231,7 @@
                     _v4.style.border = "2px solid #28a745";
                 } else { alert("番号が見つかりませんでした。"); }
             } catch (err) { alert("エラーが発生しました。"); }
-            finally { _v2.style.display = 'none'; }
+            finally { _v2.style.display = 'none'; } // 処理完了後に解析中を非表示
         });
     })();
 </script>
