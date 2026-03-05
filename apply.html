@@ -53,14 +53,15 @@
         .scan-area { margin-top: 10px; text-align: center; background: #fff8f3; padding: 20px; border-radius: 6px; border: 1px dashed var(--brand-orange); }
         .scan-title { font-size: 0.9rem; font-weight: bold; color: var(--brand-orange); margin-bottom: 8px; }
 
-        .camera-btn-wrapper { text-align: center; margin: 20px 0; }
-        #f1 { display: none; } /* デフォルトのボタンは隠す */
+        /* 2つのアクションボタンのスタイル */
+        .action-buttons { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
         .btn-scan {
-            background-color: var(--brand-orange); color: white; padding: 15px 30px;
-            border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.9rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s;
+            background-color: var(--brand-orange); color: white; padding: 15px;
+            border-radius: 8px; cursor: pointer; display: block; font-weight: bold; font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;
         }
-        .btn-scan:active { transform: scale(0.95); }
+        .btn-scan:active { transform: scale(0.98); }
+        .btn-album { background-color: var(--rikuden-blue); } /* アルバム選択は青色にして視覚的に分ける */
         
         #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 15px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
         
@@ -144,13 +145,14 @@
                     
                     <div class="scan-area">
                         <div class="scan-title">＜供給地点特定番号入力サポート＞</div>
-                        <p class="note" style="margin-bottom:10px;">検針票（もしくはマイページ内の２２桁の番号が表示されているページ）もしくは画像をアップロードするだけで自動的に入力します。</p>
+                        <p class="note" style="margin-bottom:10px;">検針票（もしくはマイページ内の２２桁の番号が表示されているページ）の画像を読み込みます。以下のいずれかを選択してください。</p>
                         
-                        <div class="camera-btn-wrapper">
-                            <label for="f1" class="btn-scan">
-                                📷 検針票を撮影する／画像をアップロード
-                            </label>
-                            <input type="file" id="f1" accept="image/*">
+                        <div class="action-buttons">
+                            <label for="f1_camera" class="btn-scan">📷 カメラを起動して撮影する</label>
+                            <input type="file" id="f1_camera" accept="image/*" capture="environment" style="display: none;">
+
+                            <label for="f1_album" class="btn-scan btn-album">🖼 スマホの画像から選択する</label>
+                            <input type="file" id="f1_album" accept="image/*" style="display: none;">
                         </div>
                         
                         <div id="ld">⏳ AIが解析中... しばらくお待ちください</div>
@@ -241,7 +243,6 @@
     // ----------------------------------------------------
     (function(){
         const API_KEY = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
-        const fileInput = document.getElementById('f1');
         const loading = document.getElementById('ld');
         const errorArea = document.getElementById('errorArea');
         const locNumber = document.getElementById('d1');
@@ -255,7 +256,8 @@
             reader.onerror = error => reject(error);
         });
 
-        fileInput.addEventListener('change', async (e) => {
+        // カメラ・アルバム両方で共通して実行される処理
+        const processImage = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -317,8 +319,14 @@
                 console.error(err);
             } finally {
                 loading.style.display = 'none';
+                // 同じファイルを連続で選択できるように入力をリセット
+                e.target.value = '';
             }
-        });
+        };
+
+        // 2つの入力ボタンに同じ処理を紐付け
+        document.getElementById('f1_camera').addEventListener('change', processImage);
+        document.getElementById('f1_album').addEventListener('change', processImage);
     })();
 </script>
 </body>
