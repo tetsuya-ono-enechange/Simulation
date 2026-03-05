@@ -20,7 +20,7 @@
     <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
     <style>
         :root { --brand-orange: #e56000; --rikuden-blue: #005aa0; --bg-gray: #f4f5f7; }
-        body { font-family: "Hiragino Sans", "Meiryo", sans-serif; background-color: var(--bg-gray); color: #333; padding: 0; margin: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-gray); color: #333; padding: 0; margin: 0; }
         
         header { background: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rikuden-blue); }
         .header-logo { font-weight: bold; font-size: 1.2rem; color: var(--rikuden-blue); }
@@ -53,35 +53,15 @@
         .scan-area { margin-top: 10px; text-align: center; background: #fff8f3; padding: 20px; border-radius: 6px; border: 1px dashed var(--brand-orange); }
         .scan-title { font-size: 0.9rem; font-weight: bold; color: var(--brand-orange); margin-bottom: 8px; }
 
-        /* LINE対策: ファイル入力ボタンのオーバーレイ実装 */
-        .file-upload-wrapper {
-            position: relative;
-            display: inline-block;
-            margin-top: 10px;
-            overflow: hidden;
-            border-radius: 50px;
-        }
+        /* 動作実績のあるデモコードに合わせたカメラスタイル */
+        .camera-btn-wrapper { text-align: center; margin: 20px 0; }
+        #f1 { display: none; } /* デフォルトのボタンは隠す */
         .btn-scan {
-            background-color: var(--brand-orange);
-            color: white;
-            padding: 15px 30px;
-            cursor: pointer;
-            display: inline-block;
-            font-weight: bold;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: var(--brand-orange); color: white; padding: 15px 30px;
+            border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s;
         }
-        /* input本体を透明にしてボタンの真上に被せる */
-        #f1 {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 10;
-        }
+        .btn-scan:active { transform: scale(0.95); }
         
         #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 15px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
         
@@ -167,8 +147,10 @@
                         <div class="scan-title">＜供給地点特定番号入力サポート＞</div>
                         <p class="note" style="margin-bottom:10px;">検針票（もしくはマイページ内の２２桁の番号が表示されているページ）もしくは画像をアップロードするだけで自動的に入力します。</p>
                         
-                        <div class="file-upload-wrapper">
-                            <div class="btn-scan">📷 検針票を撮影する／画像をアップロード</div>
+                        <div class="camera-btn-wrapper">
+                            <label for="f1" class="btn-scan">
+                                📷 検針票を撮影する／画像をアップロード
+                            </label>
                             <input type="file" id="f1" accept="image/*" capture="environment">
                         </div>
                         
