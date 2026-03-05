@@ -7,8 +7,7 @@
     
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
-        // LIFFの初期化（LINE内で動作させる場合に必要です）
-        // ※ 本番環境に合わせて "あなたのLIFF ID" を実際のものに変更してください。
+        // LIFFの初期化
         liff.init({ liffId: "あなたのLIFF ID" })
             .then(() => {
                 console.log("LIFF初期化完了");
@@ -53,15 +52,41 @@
         /* スキャンエリア */
         .scan-area { margin-top: 10px; text-align: center; background: #fff8f3; padding: 20px; border-radius: 6px; border: 1px dashed var(--brand-orange); }
         .scan-title { font-size: 0.9rem; font-weight: bold; color: var(--brand-orange); margin-bottom: 8px; }
-        .btn-scan { background-color: var(--brand-orange); color: white; padding: 12px 20px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.85rem; }
+
+        /* LINE対策: ファイル入力ボタンのオーバーレイ実装 */
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-top: 10px;
+            overflow: hidden;
+            border-radius: 50px;
+        }
+        .btn-scan {
+            background-color: var(--brand-orange);
+            color: white;
+            padding: 15px 30px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* input本体を透明にしてボタンの真上に被せる */
+        #f1 {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
         
-        /* カメラ入力ボタンの非表示（参考コード準拠） */
-        #f1 { display: none; }
-        
-        #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 10px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
+        #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 15px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
         
         /* ステータス・エラー表示 */
-        #ld { display: none; margin-top: 10px; font-weight: bold; color: var(--rikuden-blue); }
+        #ld { display: none; margin-top: 15px; font-weight: bold; color: var(--rikuden-blue); }
         #errorArea { color: #d93025; background: #fce8e6; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; margin-top: 10px; text-align: left; }
 
         .btn-submit { width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: var(--rikuden-blue); border: none; border-radius: 4px; cursor: pointer; margin-top: 40px; }
@@ -142,8 +167,10 @@
                         <div class="scan-title">＜供給地点特定番号入力サポート＞</div>
                         <p class="note" style="margin-bottom:10px;">検針票（もしくはマイページ内の２２桁の番号が表示されているページ）もしくは画像をアップロードするだけで自動的に入力します。</p>
                         
-                        <label for="f1" class="btn-scan">📷 検針票を撮影する／画像をアップロード</label>
-                        <input type="file" id="f1" accept="image/*" capture="environment">
+                        <div class="file-upload-wrapper">
+                            <div class="btn-scan">📷 検針票を撮影する／画像をアップロード</div>
+                            <input type="file" id="f1" accept="image/*" capture="environment">
+                        </div>
                         
                         <div id="ld">⏳ AIが解析中... しばらくお待ちください</div>
                         <div id="errorArea"></div>
@@ -239,7 +266,7 @@
         const locNumber = document.getElementById('d1');
         const preview = document.getElementById('pv');
 
-        // 参考コードから引用したBase64変換のPromise関数
+        // Base64変換のPromise関数
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
