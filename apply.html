@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>電気のプラン変更お申し込み | ENECHANGE</title>
+    
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script>
+        // LIFFの初期化（LINE内で動作させる場合に必要です）
+        // ※ 本番環境に合わせて "あなたのLIFF ID" を実際のものに変更してください。
+        liff.init({ liffId: "あなたのLIFF ID" })
+            .then(() => {
+                console.log("LIFF初期化完了");
+            })
+            .catch((err) => {
+                console.error("LIFF初期化失敗", err);
+            });
+    </script>
+
     <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
     <style>
         :root { --brand-orange: #e56000; --rikuden-blue: #005aa0; --bg-gray: #f4f5f7; }
@@ -41,10 +55,14 @@
         .scan-title { font-size: 0.9rem; font-weight: bold; color: var(--brand-orange); margin-bottom: 8px; }
         .btn-scan { background-color: var(--brand-orange); color: white; padding: 12px 20px; border-radius: 50px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.85rem; }
         
-        /* カメラ起動のための非表示設定 (display:noneを使うとiOS等で起動しないため) */
-        .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+        /* カメラ入力ボタンの非表示（参考コード準拠） */
+        #f1 { display: none; }
         
         #pv { width: 100%; max-width: 200px; border-radius: 8px; margin-top: 10px; display: none; border: 1px solid #ddd; margin-left: auto; margin-right: auto; }
+        
+        /* ステータス・エラー表示 */
+        #ld { display: none; margin-top: 10px; font-weight: bold; color: var(--rikuden-blue); }
+        #errorArea { color: #d93025; background: #fce8e6; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; margin-top: 10px; text-align: left; }
 
         .btn-submit { width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; color: #fff; background-color: var(--rikuden-blue); border: none; border-radius: 4px; cursor: pointer; margin-top: 40px; }
         footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #666; }
@@ -122,11 +140,14 @@
                     
                     <div class="scan-area">
                         <div class="scan-title">＜供給地点特定番号入力サポート＞</div>
-                        <p class="note" style="margin-bottom:10px;">検針票を撮影もしくは画像をアップロードするだけで自動的に入力します。</p>
-                        <label for="f1" class="btn-scan">検針票を撮影する／画像をアップロードする</label>
-                        <input type="file" id="f1" class="visually-hidden" accept="image/*" capture="environment">
-                        <div id="ld" style="display:none; margin-top:10px; font-weight:bold; color:var(--rikuden-blue);">⏳ 解析中... しばらくお待ちください</div>
-                        <img id="pv">
+                        <p class="note" style="margin-bottom:10px;">検針票（もしくはマイページ内の２２桁の番号が表示されているページ）もしくは画像をアップロードするだけで自動的に入力します。</p>
+                        
+                        <label for="f1" class="btn-scan">📷 検針票を撮影する／画像をアップロード</label>
+                        <input type="file" id="f1" accept="image/*" capture="environment">
+                        
+                        <div id="ld">⏳ AIが解析中... しばらくお待ちください</div>
+                        <div id="errorArea"></div>
+                        <img id="pv" alt="プレビュー">
                     </div>
                 </div>
 
@@ -149,39 +170,32 @@
 
 <script>
     // ----------------------------------------------------
-    // オートカナ（フリガナ自動入力）のカスタム処理
+    // オートカナ（フリガナ自動入力）の処理
     // ----------------------------------------------------
     function setupAutoKana(nameId, kanaId) {
         const nameEl = document.getElementById(nameId);
         const kanaEl = document.getElementById(kanaId);
         let currentKana = '';
-        let baseKana = ''; // 確定済みのカナ
+        let baseKana = '';
 
-        nameEl.addEventListener('compositionstart', () => {
-            baseKana = kanaEl.value; // 入力開始時に現在のカナを保持
-        });
-        
+        nameEl.addEventListener('compositionstart', () => { baseKana = kanaEl.value; });
         nameEl.addEventListener('compositionupdate', (e) => {
             const text = e.data;
-            // 入力中テキストが「ひらがな」の場合のみ処理
             if (/^[ぁ-んー]+$/.test(text)) {
-                // ひらがなをカタカナに変換
                 currentKana = text.replace(/[ぁ-ん]/g, function(s) {
                     return String.fromCharCode(s.charCodeAt(0) + 0x60);
                 });
                 kanaEl.value = baseKana + currentKana;
             }
         });
-        
         nameEl.addEventListener('compositionend', () => {
-            baseKana = kanaEl.value; // 漢字変換確定時にカナを更新
+            baseKana = kanaEl.value;
             currentKana = '';
         });
     }
 
     // 初期化処理
     window.onload = function() {
-        // プラン名・郵便番号の引き継ぎ
         const params = new URLSearchParams(window.location.search);
         if (params.get('plan_name')) {
             document.getElementById('selectedPlanDisplay').value = decodeURIComponent(params.get('plan_name'));
@@ -192,8 +206,6 @@
             const event = new Event('keyup', { bubbles: true });
             document.getElementById('postcode').dispatchEvent(event);
         }
-
-        // オートカナ機能の紐づけ
         setupAutoKana('lastName', 'lastNameKana');
         setupAutoKana('firstName', 'firstNameKana');
         setupAutoKana('corpName', 'corpNameKana');
@@ -206,19 +218,13 @@
         const corporate = document.getElementById('corporateFields');
         
         if (type === 'personal') {
-            personal.style.display = 'block';
-            corporate.style.display = 'none';
-            document.getElementById('corpName').required = false;
-            document.getElementById('corpNameKana').required = false;
-            document.getElementById('lastName').required = true;
-            document.getElementById('firstName').required = true;
+            personal.style.display = 'block'; corporate.style.display = 'none';
+            document.getElementById('corpName').required = false; document.getElementById('corpNameKana').required = false;
+            document.getElementById('lastName').required = true; document.getElementById('firstName').required = true;
         } else {
-            personal.style.display = 'none';
-            corporate.style.display = 'block';
-            document.getElementById('corpName').required = true;
-            document.getElementById('corpNameKana').required = true;
-            document.getElementById('lastName').required = false;
-            document.getElementById('firstName').required = false;
+            personal.style.display = 'none'; corporate.style.display = 'block';
+            document.getElementById('corpName').required = true; document.getElementById('corpNameKana').required = true;
+            document.getElementById('lastName').required = false; document.getElementById('firstName').required = false;
         }
     }
 
@@ -226,51 +232,83 @@
     // カメラ撮影 ＆ OCR（画像解析）処理
     // ----------------------------------------------------
     (function(){
-        const _0x_k = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
-        const _v1 = document.getElementById('f1');
-        const _v2 = document.getElementById('ld');
-        const _v4 = document.getElementById('d1');
-        const _v6 = document.getElementById('pv');
+        const API_KEY = 'AIzaSyAAtc3_OIUQOCFbLaW6KoOhH0CUhfqMxVw';
+        const fileInput = document.getElementById('f1');
+        const loading = document.getElementById('ld');
+        const errorArea = document.getElementById('errorArea');
+        const locNumber = document.getElementById('d1');
+        const preview = document.getElementById('pv');
 
-        _v1.addEventListener('change', async (e) => {
-            const _file = e.target.files[0];
-            if (!_file) return;
+        // 参考コードから引用したBase64変換のPromise関数
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // UIリセット
+            errorArea.style.display = 'none';
+            loading.style.display = 'block';
+            locNumber.style.borderColor = "#ccc";
             
-            // 解析中の表示をオンにする
-            _v2.style.display = 'block'; 
-            
-            const _rd = new FileReader();
-            _rd.onload = (f) => { _v6.src = f.target.result; _v6.style.display = 'block'; };
-            _rd.readAsDataURL(_file);
+            // プレビュー表示
+            const reader = new FileReader();
+            reader.onload = (f) => {
+                preview.src = f.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
 
             try {
-                const _b6 = await new Promise((r) => {
-                    const a = new FileReader(); a.readAsDataURL(_file); a.onload = () => r(a.result);
-                });
-                const _res = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${_0x_k}`, {
+                const base64Image = await toBase64(file);
+                
+                const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         requests: [{
-                            image: { content: _b6.split(',')[1] },
+                            image: { content: base64Image.split(',')[1] },
                             features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
                         }]
                     })
                 });
-                const _data = await _res.json();
-                const _tx = _data.responses[0].fullTextAnnotation.text;
-                const _m = _tx.replace(/[\s\n-]/g, '').match(/\d{22}/);
-                if (_m) {
-                    _v4.value = _m[0];
-                    _v4.style.border = "2px solid #28a745";
-                } else { 
-                    alert("番号が見つかりませんでした。別の画像をお試しいただくか、手動でご入力ください。"); 
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(`Google APIエラー: ${data.error.message}`);
                 }
-            } catch (err) { 
-                alert("画像解析中にエラーが発生しました。"); 
-            } finally { 
-                // 処理が完了したら解析中をオフにする
-                _v2.style.display = 'none'; 
+
+                const result = data.responses[0];
+
+                if (result && result.fullTextAnnotation) {
+                    const text = result.fullTextAnnotation.text;
+                    const cleanText = text.replace(/[\s\n-]/g, '');
+                    const match = cleanText.match(/\d{22}/);
+
+                    if (match) {
+                        locNumber.value = match[0];
+                        locNumber.style.borderColor = "#28a745"; // 成功時は緑枠
+                        locNumber.style.borderWidth = "2px";
+                    } else {
+                        errorArea.innerText = "22桁の番号が見つかりませんでした。文字がはっきり写るように撮り直してください。";
+                        errorArea.style.display = 'block';
+                    }
+                } else {
+                    throw new Error("画像から文字を読み取れませんでした。");
+                }
+
+            } catch (err) {
+                errorArea.innerText = "エラー: " + err.message;
+                errorArea.style.display = 'block';
+                console.error(err);
+            } finally {
+                loading.style.display = 'none';
             }
         });
     })();
