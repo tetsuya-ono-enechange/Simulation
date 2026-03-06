@@ -119,6 +119,28 @@
 </div>
 
 <script>
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz4xTv6uFwj9JyICY5G37AAxIshUqnMm-QJi_n08NPx4ynLN21SCECh_W051xOmKoxF/exec";
+
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch(GAS_API_URL);
+        const config = await response.json();
+        
+        // バナー反映
+        if (config.bannerUrl) {
+            document.querySelector('.banner-container img').src = config.bannerUrl;
+        }
+        // デフォルト電力会社反映
+        if (config.defaultProvider) {
+            const providerSelect = document.getElementById('currentProvider');
+            providerSelect.value = config.defaultProvider;
+            providerSelect.dispatchEvent(new Event('change'));
+        }
+    } catch (e) {
+        console.error("設定の読み込みに失敗しました", e);
+    }
+});
+  
   // <script> 内の冒頭に追加
 window.addEventListener('DOMContentLoaded', (event) => {
     const config = JSON.parse(localStorage.getItem('enechange_config'));
