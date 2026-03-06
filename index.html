@@ -15,7 +15,7 @@
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      background-color: #fff; /* 読み込み中用 */
+      background-color: #fff;
       min-height: 100px;
     }
     .banner-container img {
@@ -120,32 +120,42 @@
 </div>
 
 <script>
-// --- 管理設定の読み込み処理 ---
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxzJ2x83-20Tg1kJTujfjtWp1MsGJe_bb4bJKmutbCcuroyhv9FCRn46bOoh8uwa-VZ/exec";
+// --- GASからの設定読み込みとパラメータ出し分けロジック ---
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz4xTv6uFwj9JyICY5G37AAxIshUqnMm-QJi_n08NPx4ynLN21SCECh_W051xOmKoxF/exec";
 
 window.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch(GAS_API_URL);
         const config = await response.json();
         
-        // 1. バナー反映
-        if (config.bannerUrl && config.bannerUrl.includes("http")) {
-            document.getElementById('mainBanner').src = config.bannerUrl;
+        // 1. バナー出し分け判定
+        const urlParams = new URLSearchParams(window.location.search);
+        let finalBannerUrl = config.bannerUrl; // 基本のバナー
+
+        // 設定されたパラメータ条件に一致するかチェック
+        if (config.paramName && config.paramValue && config.paramBannerUrl) {
+            if (urlParams.get(config.paramName) === config.paramValue) {
+                finalBannerUrl = config.paramBannerUrl;
+                console.log("Parameter matched: displaying specialized banner.");
+            }
         }
-        
+
+        if (finalBannerUrl) {
+            document.getElementById('mainBanner').src = finalBannerUrl;
+        }
+
         // 2. デフォルト電力会社反映
         if (config.defaultProvider) {
             const providerSelect = document.getElementById('currentProvider');
             providerSelect.value = config.defaultProvider;
-            // プランのプルダウンを更新するためにchangeイベントを発火
             providerSelect.dispatchEvent(new Event('change'));
         }
     } catch (e) {
-        console.error("管理設定の読み込みに失敗しました:", e);
+        console.error("設定の読み込みに失敗しました", e);
     }
 });
 
-// --- シミュレーション本体のロジック ---
+// --- シミュレーション本体ロジック ---
 const providersAndPlans = {
   hepco: {
     name: "北海道電力",
@@ -180,7 +190,6 @@ const providersAndPlans = {
 const currentProvider = document.getElementById('currentProvider');
 const currentPlan = document.getElementById('currentPlan');
 
-// 電力会社選択時の連動処理
 currentProvider.addEventListener('change', function() {
   const selectedProvider = this.value;
   currentPlan.innerHTML = '<option value="" disabled selected>プランを選択してください</option>';
@@ -261,39 +270,25 @@ document.getElementById('simulationForm').addEventListener('submit', async funct
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.detail || data.message || `APIエラー (${response.status})`);
-    }
-
-    if (!data.target_plans || data.target_plans.length === 0) {
-      throw new Error('シミュレーション可能なプランが見つかりませんでした。');
-    }
+    if (!response.ok) throw new Error(data.detail || data.message || `APIエラー (${response.status})`);
+    if (!data.target_plans || data.target_plans.length === 0) throw new Error('プランが見つかりませんでした。');
 
     let bestPlan = data.target_plans[0].elec;
     for (const plan of data.target_plans) {
-      if ((plan.elec.year_saving || 0) > (bestPlan.year_saving || 0)) {
-        bestPlan = plan.elec;
-      }
+      if ((plan.elec.year_saving || 0) > (bestPlan.year_saving || 0)) bestPlan = plan.elec;
     }
 
     const savingAmount = bestPlan.year_saving || 0;
-    if (savingAmount > 0) {
-      document.getElementById('savingsText').textContent = `年間 約 ${savingAmount.toLocaleString()} 円 おトク！`;
-    } else {
-      document.getElementById('savingsText').textContent = `現在のプランが一番お得です！`;
-    }
+    document.getElementById('savingsText').textContent = savingAmount > 0 ? `年間 約 ${savingAmount.toLocaleString()} 円 おトク！` : `現在のプランが一番お得です！`;
     document.getElementById('planDetails').textContent = `${bestPlan.provider_name} - ${bestPlan.plan_name}`;
     
     const applyLinkBtn = document.getElementById('applyLinkBtn');
-    if(applyLinkBtn) {
-      applyLinkBtn.href = `apply.html?plan_code=${bestPlan.plan_code}&plan_name=${encodeURIComponent(bestPlan.plan_name)}`;
-    }
+    if(applyLinkBtn) applyLinkBtn.href = `apply.html?plan_code=${bestPlan.plan_code}&plan_name=${encodeURIComponent(bestPlan.plan_name)}`;
+    
     resultArea.style.display = 'block';
 
   } catch (error) {
     errorMessage.textContent = 'シミュレーションに失敗しました: ' + error.message;
-    console.error(error);
   } finally {
     loadingText.style.display = 'none';
   }
