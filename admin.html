@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>管理画面 | ENECHANGE</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .admin-panel { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #e56000; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="admin-panel" id="loginArea">
+    <h2>管理者ログイン</h2>
+    <input type="password" id="adminPass" placeholder="パスワードを入力">
+    <button onclick="checkAuth()">ログイン</button>
+</div>
+
+<div class="admin-panel hidden" id="configArea">
+    <h2>バナー・初期設定変更</h2>
+    <label>バナー画像URL</label>
+    <input type="text" id="configBannerUrl" placeholder="https://...">
+    
+    <label>デフォルト電力会社</label>
+    <select id="configDefaultProvider">
+        <option value="hepco">北海道電力</option>
+        <option value="tepco">東京電力</option>
+        <option value="chuden">中部電力</option>
+        <option value="kanden">関西電力</option>
+    </select>
+
+    <button onclick="saveConfig()">設定を保存する</button>
+</div>
+
+<script>
+    const PASS = "enechange2026"; // 簡易的なパスワード
+
+    function checkAuth() {
+        if (document.getElementById('adminPass').value === PASS) {
+            document.getElementById('loginArea').classList.add('hidden');
+            document.getElementById('configArea').classList.remove('hidden');
+            loadCurrentConfig();
+        } else {
+            alert("パスワードが違います");
+        }
+    }
+
+    function loadCurrentConfig() {
+        const config = JSON.parse(localStorage.getItem('enechange_config')) || {};
+        document.getElementById('configBannerUrl').value = config.bannerUrl || "";
+        document.getElementById('configDefaultProvider').value = config.defaultProvider || "tepco";
+    }
+
+    function saveConfig() {
+        const config = {
+            bannerUrl: document.getElementById('configBannerUrl').value,
+            defaultProvider: document.getElementById('configDefaultProvider').value
+        };
+        localStorage.setItem('enechange_config', JSON.stringify(config));
+        alert("設定を保存しました。シミュレーション画面を確認してください。");
+    }
+</script>
+</body>
+</html>
