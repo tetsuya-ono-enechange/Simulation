@@ -119,6 +119,27 @@
 </div>
 
 <script>
+  // <script> 内の冒頭に追加
+window.addEventListener('DOMContentLoaded', (event) => {
+    const config = JSON.parse(localStorage.getItem('enechange_config'));
+    
+    if (config) {
+        // バナーURLの反映
+        if (config.bannerUrl) {
+            const bannerImg = document.querySelector('.banner-container img');
+            if (bannerImg) bannerImg.src = config.bannerUrl;
+        }
+
+        // デフォルト電力会社の反映
+        if (config.defaultProvider) {
+            const providerSelect = document.getElementById('currentProvider');
+            providerSelect.value = config.defaultProvider;
+            
+            // dispatchEventを呼ぶことで、連動しているプラン選択肢を更新させる
+            providerSelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
 // 電力会社とプランのサンプルデータ
 const providersAndPlans = {
   hepco: {
