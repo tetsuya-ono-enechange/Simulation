@@ -11,9 +11,12 @@
         button { width: 100%; padding: 15px; background: #e56000; color: #fff; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .current-banner { width: 100%; max-height: 150px; object-fit: contain; border: 1px solid #ddd; margin-bottom: 10px; background: #eee; }
         h3 { border-left: 5px solid #e56000; padding-left: 10px; margin-top: 30px; }
+        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); text-align:center; padding-top:20%; z-index:100; }
     </style>
 </head>
 <body>
+
+<div id="loader" class="loading-overlay">通信中...</div>
 
 <div class="admin-panel" id="loginArea">
     <h2>管理者ログイン</h2>
@@ -38,35 +41,48 @@
     </select>
 
     <h3>2. パラメータ別出し分け設定</h3>
-    <p style="font-size:0.8rem; color: #666;">URLに「?◯◯=△△」がついている時に表示するバナーを設定できます。</p>
     <label>現在のパラメータ用バナー</label>
     <img id="currParamImg" class="current-banner" src="">
     <input type="file" id="fileParam" accept="image/*">
     
     <div style="display:flex; gap:10px;">
         <div style="flex:1;"><label>変数名 (例: campaign)</label><input type="text" id="paramName"></div>
-        <div style="flex:1;"><label>値 (例: summer)</label><input type="text" id="paramValue"></div>
+        <div style="flex:1;"><label>値 (例: winter)</label><input type="text" id="paramValue"></div>
     </div>
 
     <button onclick="saveConfig()" id="saveBtn">全ての設定を保存する</button>
 </div>
 
 <script>
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzQJvcihA_K5VJnJ9r9c9L5UeCkDN_o5YlbYeTrWCkK5smnUU6AutJepdmhAZQee24u/exec";
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbww6QBAj5VoEzhXWpk4ibM410Ts9p8nSxJCwdGSqCPVT6nWb2LpmUNIykCYp5K3jMzz/exec";
 let savedPassword = "";
 
 async function checkAuth() {
-    if (document.getElementById('adminPass').value === "enechange2026") {
-        savedPassword = "enechange2026";
-        document.getElementById('loginArea').classList.add('hidden');
-        document.getElementById('configArea').classList.remove('hidden');
-        loadCurrentConfig();
-    } else { alert("認証失敗"); }
+    const passInput = document.getElementById('adminPass');
+    const loader = document.getElementById('loader');
+    loader.style.display = "block";
+
+    try {
+        // パスワードをパラメータとしてGASに送り、認証結果を取得
+        const res = await fetch(`${GAS_API_URL}?pass=${passInput.value}`);
+        const config = await res.json();
+
+        if (config.auth === "OK") {
+            savedPassword = passInput.value;
+            document.getElementById('loginArea').classList.add('hidden');
+            document.getElementById('configArea').classList.remove('hidden');
+            renderConfig(config);
+        } else {
+            alert("パスワードが正しくありません");
+        }
+    } catch (e) {
+        alert("通信エラーが発生しました");
+    } finally {
+        loader.style.display = "none";
+    }
 }
 
-async function loadCurrentConfig() {
-    const res = await fetch(GAS_API_URL);
-    const config = await res.json();
+function renderConfig(config) {
     document.getElementById('currBaseImg').src = config.bannerUrl || "";
     document.getElementById('currParamImg').src = config.paramBannerUrl || "";
     document.getElementById('configDefaultProvider').value = config.defaultProvider || "tepco";
@@ -76,13 +92,15 @@ async function loadCurrentConfig() {
 
 async function saveConfig() {
     const saveBtn = document.getElementById('saveBtn');
-    saveBtn.innerText = "保存中..."; saveBtn.disabled = true;
+    const loader = document.getElementById('loader');
+    
+    saveBtn.disabled = true;
+    loader.style.display = "block";
 
     const toBase64 = f => new Promise((res) => {
         const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result);
     });
 
-    // どちらのファイルが選ばれたか確認（同時に2つは不可とする簡易仕様）
     let imageData = null, fileName = null, target = 'base';
     const fBase = document.getElementById('fileBase').files[0];
     const fParam = document.getElementById('fileParam').files[0];
@@ -102,9 +120,22 @@ async function saveConfig() {
         }
     };
 
-    const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
-    if ((await response.text()) === "Success") { alert("保存完了"); location.reload(); }
-    else { alert("エラー"); saveBtn.disabled = false; }
+    try {
+        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
+        const result = await response.text();
+        if (result === "Success") {
+            alert("保存が完了しました");
+            location.reload();
+        } else {
+            alert("保存に失敗しました: " + result);
+            saveBtn.disabled = false;
+        }
+    } catch (e) {
+        alert("通信エラー");
+        saveBtn.disabled = false;
+    } finally {
+        loader.style.display = "none";
+    }
 }
 </script>
 </body>
