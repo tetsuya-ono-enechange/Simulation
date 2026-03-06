@@ -1,30 +1,11 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>管理画面 | ENECHANGE</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-        .admin-panel { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #e56000; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-<div class="admin-panel" id="loginArea">
-    <h2>管理者ログイン</h2>
-    <input type="password" id="adminPass" placeholder="パスワードを入力">
-    <button onclick="checkAuth()">ログイン</button>
-</div>
-
 <div class="admin-panel hidden" id="configArea">
     <h2>バナー・初期設定変更</h2>
-    <label>バナー画像URL</label>
-    <input type="text" id="configBannerUrl" placeholder="https://...">
     
-    <label>デフォルト電力会社</label>
+    <label>バナー画像をアップロード</label>
+    <input type="file" id="fileInput" accept="image/*">
+    <div id="previewArea" style="margin-top:10px;"><img id="imgPreview" style="max-width:100%; display:none;"></div>
+    
+    <label style="margin-top:20px; display:block;">デフォルト電力会社</label>
     <select id="configDefaultProvider">
         <option value="hepco">北海道電力</option>
         <option value="tepco">東京電力</option>
@@ -32,36 +13,73 @@
         <option value="kanden">関西電力</option>
     </select>
 
-    <button onclick="saveConfig()">設定を保存する</button>
+    <button onclick="saveConfig()" id="saveBtn">設定を保存する</button>
 </div>
 
 <script>
-    const PASS = "enechange2026"; // 簡易的なパスワード
+// 画像プレビュー表示処理
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const img = document.getElementById('imgPreview');
+        img.src = event.target.result;
+        img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+});
 
-    function checkAuth() {
-        if (document.getElementById('adminPass').value === PASS) {
-            document.getElementById('loginArea').classList.add('hidden');
-            document.getElementById('configArea').classList.remove('hidden');
-            loadCurrentConfig();
-        } else {
-            alert("パスワードが違います");
-        }
+async function saveConfig() {
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.innerText = "保存中...";
+    saveBtn.disabled = true;
+
+    const password = document.getElementById('adminPass').value;
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    let imageData = null;
+    let fileName = null;
+
+    // ファイルが選択されている場合、Base64に変換
+    if (file) {
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+        imageData = await toBase64(file);
+        fileName = file.name;
     }
 
-    function loadCurrentConfig() {
-        const config = JSON.parse(localStorage.getItem('enechange_config')) || {};
-        document.getElementById('configBannerUrl').value = config.bannerUrl || "";
-        document.getElementById('configDefaultProvider').value = config.defaultProvider || "tepco";
-    }
-
-    function saveConfig() {
-        const config = {
-            bannerUrl: document.getElementById('configBannerUrl').value,
+    const payload = {
+        password: password,
+        imageData: imageData,
+        fileName: fileName,
+        config: {
             defaultProvider: document.getElementById('configDefaultProvider').value
-        };
-        localStorage.setItem('enechange_config', JSON.stringify(config));
-        alert("設定を保存しました。シミュレーション画面を確認してください。");
+        }
+    };
+
+    try {
+        const response = await fetch(GAS_API_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+        const result = await response.text();
+        if (result === "Success") {
+            alert("アップロード完了！バナーが更新されました。");
+            location.reload(); 
+        } else {
+            alert("エラー: " + result);
+        }
+    } catch (e) {
+        alert("通信エラーが発生しました");
+    } finally {
+        saveBtn.innerText = "設定を保存する";
+        saveBtn.disabled = false;
     }
+}
 </script>
-</body>
-</html>
