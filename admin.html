@@ -1,11 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>管理画面 | ENECHANGE</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .admin-panel { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #e56000; color: #fff; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        label { font-weight: bold; font-size: 0.9rem; margin-top: 15px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="admin-panel" id="loginArea">
+    <h2>管理者ログイン</h2>
+    <input type="password" id="adminPass" placeholder="パスワードを入力">
+    <button onclick="checkAuth()">ログイン</button>
+</div>
+
 <div class="admin-panel hidden" id="configArea">
     <h2>バナー・初期設定変更</h2>
     
     <label>バナー画像をアップロード</label>
     <input type="file" id="fileInput" accept="image/*">
-    <div id="previewArea" style="margin-top:10px;"><img id="imgPreview" style="max-width:100%; display:none;"></div>
+    <div id="previewArea" style="margin-top:10px;">
+        <img id="imgPreview" style="max-width:100%; display:none; border: 1px solid #ccc;">
+    </div>
     
-    <label style="margin-top:20px; display:block;">デフォルト電力会社</label>
+    <label>デフォルト電力会社</label>
     <select id="configDefaultProvider">
         <option value="hepco">北海道電力</option>
         <option value="tepco">東京電力</option>
@@ -17,7 +41,22 @@
 </div>
 
 <script>
-// 画像プレビュー表示処理
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxzJ2x83-20Tg1kJTujfjtWp1MsGJe_bb4bJKmutbCcuroyhv9FCRn46bOoh8uwa-VZ/exec";
+let savedPassword = ""; 
+
+// ログインチェック
+function checkAuth() {
+    const passInput = document.getElementById('adminPass');
+    if (passInput.value === "enechange2026") {
+        savedPassword = passInput.value;
+        document.getElementById('loginArea').classList.add('hidden');
+        document.getElementById('configArea').classList.remove('hidden');
+    } else {
+        alert("パスワードが違います");
+    }
+}
+
+// プレビュー表示
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -30,32 +69,31 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     reader.readAsDataURL(file);
 });
 
+// 保存処理
 async function saveConfig() {
     const saveBtn = document.getElementById('saveBtn');
-    saveBtn.innerText = "保存中...";
+    saveBtn.innerText = "アップロード中...";
     saveBtn.disabled = true;
 
-    const password = document.getElementById('adminPass').value;
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
 
     let imageData = null;
     let fileName = null;
 
-    // ファイルが選択されている場合、Base64に変換
     if (file) {
-        const toBase64 = file => new Promise((resolve, reject) => {
+        const toBase64 = f => new Promise((res, rej) => {
             const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
+            reader.readAsDataURL(f);
+            reader.onload = () => res(reader.result);
+            reader.onerror = e => rej(e);
         });
         imageData = await toBase64(file);
         fileName = file.name;
     }
 
     const payload = {
-        password: password,
+        password: savedPassword,
         imageData: imageData,
         fileName: fileName,
         config: {
@@ -70,16 +108,18 @@ async function saveConfig() {
         });
         const result = await response.text();
         if (result === "Success") {
-            alert("アップロード完了！バナーが更新されました。");
+            alert("更新完了！全ユーザーに反映されました。");
             location.reload(); 
         } else {
             alert("エラー: " + result);
         }
     } catch (e) {
-        alert("通信エラーが発生しました");
+        alert("通信エラーが発生しました。GASのデプロイ設定を確認してください。");
     } finally {
         saveBtn.innerText = "設定を保存する";
         saveBtn.disabled = false;
     }
 }
 </script>
+</body>
+</html>
